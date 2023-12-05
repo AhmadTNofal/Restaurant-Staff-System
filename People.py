@@ -120,13 +120,13 @@ def login_screen():
     # Username label and entry
     username_label = tk.Label(window, text="Email:")
     username_label.pack()
-    username_entry = tk.Entry(window)
+    username_entry = tk.Entry(window, width=30)
     username_entry.pack()
 
             # Password label and entry
     password_label = tk.Label(window, text="Password:")
     password_label.pack()
-    password_entry = tk.Entry(window, show="*")
+    password_entry = tk.Entry(window, show="*", width=30)
     password_entry.pack()
 
             # Login button
