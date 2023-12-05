@@ -90,51 +90,60 @@ db = mysql.connector.connect(
     host="mysqldevoyard.mysql.database.azure.com",
     user="admintest",
     password="P@ssw0rd",
-    database="group1_asd")
+    database="group1_asd"
+)
 
-        # Create the login screen
+# Create the login screen
 def login_screen():
     def login():
         email = username_entry.get()
         password = password_entry.get()
 
-# Retrieve data from the hrdirector table
-        cursor = db.cursor()
-        query = "SELECT * FROM hrdirector WHERE email = %s AND password = %s"
-        cursor.execute(query, (email, password))
-        result = cursor.fetchone()
+        # Start with checking the Account table for email and password
+        cursor = db.cursor(buffered=True)
+        account_query = "SELECT Role FROM Account WHERE Email = %s AND Password = %s"
+        cursor.execute(account_query, (email, password))
+        account_result = cursor.fetchone()
 
-        if result:
-                    # Successful login
-            print("Login successful!")
-            
+        if account_result:
+            # Role found in the Account table
+            role = account_result[0]
+            print(f"Login successful! Role: {role}")
+            # Redirect or load the interface based on the role
+            # if role == 'HRDirector':
+            #     # Load HRDirector interface
+            # elif role == 'Staff':
+            #     # Load Staff interface
+            # elif role == 'Customer':
+            #     # Load Customer interface
+            # Add your role-based redirection or interface loading code here
         else:
-                    # Invalid credentials
+            # Invalid credentials
             print("Invalid email or password")
 
-            # Create the login window
+    # Create the login window
     window = tk.Tk()
     window.title("Login")
     window.geometry("350x220")
 
-    # Username label and entry
+    # Username label and text entry
     username_label = tk.Label(window, text="Email:")
     username_label.pack()
     username_entry = tk.Entry(window, width=30)
     username_entry.pack()
 
-            # Password label and entry
+    # Password label and text entry
     password_label = tk.Label(window, text="Password:")
     password_label.pack()
     password_entry = tk.Entry(window, show="*", width=30)
     password_entry.pack()
 
-            # Login button
+    # Login button
     login_button = tk.Button(window, text="Login", command=login)
     login_button.pack()
 
-            # Run the login window
+    # Run the login window
     window.mainloop()
 
-        # Run the login screen
+# Run the login screen
 login_screen()
