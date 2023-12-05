@@ -1,6 +1,13 @@
 import tkinter as tk
 import mysql.connector
 
+# Connect to the database
+db = mysql.connector.connect(
+    host="mysqldevoyard.mysql.database.azure.com",
+    user="admintest",
+    password="P@ssw0rd",
+    database="group1_asd"
+)
 #invalid credentials screen
 def invalid_screen():
     # Create a new window for displaying invalid credentials message
@@ -18,15 +25,12 @@ def invalid_screen():
 
     # Run the invalid credentials window
     invalid_window.mainloop()
-
-# Connect to the database
-db = mysql.connector.connect(
-    host="mysqldevoyard.mysql.database.azure.com",
-    user="admintest",
-    password="P@ssw0rd",
-    database="group1_asd"
-)
-
+window = tk.Tk()
+def open_hr_options_window():
+    # Create a new window for HR director options
+    hr_options_window = tk.Toplevel(window)
+    hr_options_window.title("HR Director branches")
+    hr_options_window.geometry("400x300")
 # Create the login screen
 def login_screen():
     def login():
@@ -43,9 +47,10 @@ def login_screen():
             # Role found in the Account table
             role = account_result[0]
             print(f"Login successful! Role: {role}")
+            
             # Redirect or load the interface based on the role
-            # if role == 'HRDirector':
-            #     # Load HRDirector interface
+            if role == 'Director':
+                open_hr_options_window()
             # elif role == 'Staff':
             #     # Load Staff interface
             # elif role == 'Customer':
@@ -59,7 +64,7 @@ def login_screen():
             invalid_screen()
 
     # Create the login window
-    window = tk.Tk()
+    
     window.title("Login")
     window.geometry("350x220")
 
