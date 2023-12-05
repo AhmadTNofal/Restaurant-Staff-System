@@ -107,6 +107,7 @@ def login_screen():
         if result:
                     # Successful login
             print("Login successful!")
+            
         else:
                     # Invalid credentials
             print("Invalid email or password")
@@ -114,6 +115,7 @@ def login_screen():
             # Create the login window
     window = tk.Tk()
     window.title("Login")
+    window.geometry("350x220")
 
     # Username label and entry
     username_label = tk.Label(window, text="Email:")
