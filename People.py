@@ -129,7 +129,7 @@ def login_screen():
                 invalid_window.geometry ("250x100")
             
                 # Message label
-                invalid_label = tk.Label (invalid_window, text="Invalid Credentials. Please try again.")
+                invalid_label = tk.Label (invalid_window, text="Invalid Credentials. Please try again.", fg="red")
                 invalid_label.pack (pady=10)
 
                 # OK button to close the window
