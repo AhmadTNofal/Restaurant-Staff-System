@@ -84,6 +84,8 @@ class Customer:
     
 import tkinter as tk
 import mysql.connector
+
+#invalid credentials screen
 def invalid_screen():
     # Create a new window for displaying invalid credentials message
     invalid_window = tk.Tk()
@@ -100,6 +102,7 @@ def invalid_screen():
 
     # Run the invalid credentials window
     invalid_window.mainloop()
+
 # Connect to the database
 db = mysql.connector.connect(
     host="mysqldevoyard.mysql.database.azure.com",
