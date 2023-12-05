@@ -120,6 +120,24 @@ def login_screen():
         else:
             # Invalid credentials
             print("Invalid email or password")
+            
+    # create a invalid credentials screen
+    def invalid_screen():
+        # Create a new window for displaying invalid credentials message
+        invalid_window = tk.Tk()
+        invalid_window.title ("Invalid Credentials")
+        invalid_window.geometry ("250x100")
+        
+        # Message label
+        invalid_label = tk.Label (invalid_window, text="Invalid Credentials. Please try again.")
+        invalid_label.pack (pady=10)
+
+        # OK button to close the window
+        ok_button = tk.Button (invalid_window, text="OK", command=invalid_window.destroy)
+        ok_button.pack()
+
+        # Run the invalid credentials window
+        invalid_window.mainloop()
 
     # Create the login window
     window = tk.Tk()
