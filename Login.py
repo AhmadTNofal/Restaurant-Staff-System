@@ -1,5 +1,15 @@
 import tkinter as tk
+import tkinter.font as tkFont
 import mysql.connector
+
+# Initialize the main window
+window = tk.Tk()
+
+# Create font styles after initializing the main window
+fontStyle = tkFont.Font(family="Arial", size=12)
+buttonStyle = {"font": fontStyle, "bg": "blue", "fg": "white"}
+labelStyle = {"font": fontStyle, "fg": "black"}
+entryStyle = {"font": fontStyle, "fg": "black", "bd": 2}
 
 # Connect to the database
 db = mysql.connector.connect(
@@ -8,12 +18,9 @@ db = mysql.connector.connect(
     password="P@ssw0rd",
     database="group1_asd"
 )
-#invalid credentials screen
-
-window = tk.Tk()
 
 def invalid_screen():
-    # Create a new window for displaying invalid credentials message
+    #Create a new window for displaying invalid credentials message
     invalid_window = tk.Tk()
     invalid_window.title("Invalid Credentials")
     invalid_window.geometry("250x100")
@@ -30,25 +37,20 @@ def invalid_screen():
     invalid_window.mainloop()
 
 def open_hr_options_window():
-    # Create a new window for HR director options
     hr_options_window = tk.Toplevel(window)
     hr_options_window.title("HR Director branches")
     hr_options_window.geometry("400x300")
     
-    # Retrieve branch data from the database
     cursor = db.cursor(buffered=True)
     branch_query = "SELECT City, Postcode FROM Branch"
     cursor.execute(branch_query)
     branch_results = cursor.fetchall()
 
-    # Create a list of branch names in the format "City, Postcode"
     branch_names = [f"{city}, {postcode}" for city, postcode in branch_results]
 
-    # Create the dropdown list
     selected_branch = tk.StringVar(hr_options_window)
-    selected_branch.set(branch_names[0])  # Set the default selected branch
+    selected_branch.set(branch_names[0])
 
-    # Function to update the dropdown list based on user input
     def update_dropdown(*args):
         search_term = selected_branch.get()
         filtered_branches = [branch for branch in branch_names if search_term.lower() in branch.lower()]
@@ -56,72 +58,50 @@ def open_hr_options_window():
         for branch in filtered_branches:
             branch_dropdown['menu'].add_command(label=branch, command=tk._setit(selected_branch, branch))
 
-    # Create the dropdown list with autocomplete feature
     branch_dropdown = tk.OptionMenu(hr_options_window, selected_branch, *branch_names, command=update_dropdown)
-    branch_dropdown.pack()
+    branch_dropdown.pack(pady=10)
 
-    # Select branch button
-    select_branch_button = tk.Button(hr_options_window, text="Select Branch", command=lambda: print(selected_branch.get()))
-    select_branch_button.pack()
+    select_branch_button = tk.Button(hr_options_window, text="Select Branch", command=lambda: print(selected_branch.get()), **buttonStyle)
+    select_branch_button.pack(pady=10)
 
-    # Run the HR options window
     hr_options_window.mainloop()
     
-# Create the login screen
 def login_screen():
     def login():
         email = username_entry.get()
         password = password_entry.get()
 
-        # Start with checking the Account table for email and password
         cursor = db.cursor(buffered=True)
         account_query = "SELECT Role FROM Account WHERE Email = %s AND Password = %s"
         cursor.execute(account_query, (email, password))
         account_result = cursor.fetchone()
 
         if account_result:
-            # Role found in the Account table
             role = account_result[0]
             print(f"Login successful! Role: {role}")
-            
-            # Redirect or load the interface based on the role
             if role == 'Director':
                 open_hr_options_window()
-            # elif role == 'Staff':
-            #     # Load Staff interface
-            # elif role == 'Customer':
-            #     # Load Customer interface
-            # Add your role-based redirection or interface loading code here
         else:
-            # Invalid credentials
             print("Invalid email or password")
-            
-            # create a invalid credentials screen
             invalid_screen()
 
-    # Create the login window
-    
     window.title("Login")
     window.geometry("350x220")
 
-    # Username label and text entry
-    username_label = tk.Label(window, text="Email:")
-    username_label.pack()
-    username_entry = tk.Entry(window, width=30)
-    username_entry.pack()
+    username_label = tk.Label(window, text="Email:", **labelStyle)
+    username_label.pack(pady=5)
+    username_entry = tk.Entry(window, width=30, **entryStyle)
+    username_entry.pack(pady=5)
 
-    # Password label and text entry
-    password_label = tk.Label(window, text="Password:")
-    password_label.pack()
-    password_entry = tk.Entry(window, show="*", width=30)
-    password_entry.pack()
+    password_label = tk.Label(window, text="Password:", **labelStyle)
+    password_label.pack(pady=5)
+    password_entry = tk.Entry(window, show="*", width=30, **entryStyle)
+    password_entry.pack(pady=5)
 
-    # Login button
-    login_button = tk.Button(window, text="Login", command=login)
-    login_button.pack()
+    login_button = tk.Button(window, text="Login", command=login, **buttonStyle)
+    login_button.pack(pady=10)
 
-    # Run the login window
     window.mainloop()
 
-# Run the login screen
 login_screen()
+
