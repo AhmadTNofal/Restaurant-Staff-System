@@ -20,16 +20,17 @@ db = mysql.connector.connect(
 )
 
 def invalid_screen():
+    #Create a new window for displaying invalid credentials message
     invalid_window = tk.Tk()
     invalid_window.title("Invalid Credentials")
     invalid_window.geometry("250x100")
-
-    invalid_label = tk.Label(invalid_window, text="Invalid Credentials. Please try again.", fg="red", **labelStyle)
+    # Message label
+    invalid_label = tk.Label(invalid_window, text="Invalid Credentials. Please try again.", fg="red")
     invalid_label.pack(pady=10)
-
+    # OK button to close the window
     ok_button = tk.Button(invalid_window, text="OK", command=invalid_window.destroy, **buttonStyle)
     ok_button.pack()
-
+    # Run the invalid credentials window
     invalid_window.mainloop()
 
 def open_staff_roles_window(selected_branch):
@@ -92,6 +93,7 @@ def open_hr_options_window():
         chosen_branch = selected_branch.get()
         print(f"Selected Branch: {chosen_branch}")
         open_staff_roles_window(chosen_branch)
+        hr_options_window.destroy()
 
     select_branch_button = tk.Button(hr_options_window, text="Select Branch", command=select_branch, **buttonStyle)
     select_branch_button.pack(pady=10)
