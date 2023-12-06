@@ -9,28 +9,64 @@ db = mysql.connector.connect(
     database="group1_asd"
 )
 #invalid credentials screen
+
+window = tk.Tk()
+
 def invalid_screen():
     # Create a new window for displaying invalid credentials message
     invalid_window = tk.Tk()
-    invalid_window.title ("Invalid Credentials")
-    invalid_window.geometry ("250x100")
+    invalid_window.title("Invalid Credentials")
+    invalid_window.geometry("250x100")
 
     # Message label
-    invalid_label = tk.Label (invalid_window, text="Invalid Credentials. Please try again.", fg="red")
-    invalid_label.pack (pady=10)
+    invalid_label = tk.Label(invalid_window, text="Invalid Credentials. Please try again.", fg="red")
+    invalid_label.pack(pady=10)
 
     # OK button to close the window
-    ok_button = tk.Button (invalid_window, text="OK", command=invalid_window.destroy)
+    ok_button = tk.Button(invalid_window, text="OK", command=invalid_window.destroy)
     ok_button.pack()
 
     # Run the invalid credentials window
     invalid_window.mainloop()
-window = tk.Tk()
+
 def open_hr_options_window():
     # Create a new window for HR director options
     hr_options_window = tk.Toplevel(window)
     hr_options_window.title("HR Director branches")
     hr_options_window.geometry("400x300")
+    
+    # Retrieve branch data from the database
+    cursor = db.cursor(buffered=True)
+    branch_query = "SELECT City, Postcode FROM Branch"
+    cursor.execute(branch_query)
+    branch_results = cursor.fetchall()
+
+    # Create a list of branch names in the format "City, Postcode"
+    branch_names = [f"{city}, {postcode}" for city, postcode in branch_results]
+
+    # Create the dropdown list
+    selected_branch = tk.StringVar(hr_options_window)
+    selected_branch.set(branch_names[0])  # Set the default selected branch
+
+    # Function to update the dropdown list based on user input
+    def update_dropdown(*args):
+        search_term = selected_branch.get()
+        filtered_branches = [branch for branch in branch_names if search_term.lower() in branch.lower()]
+        branch_dropdown['menu'].delete(0, 'end')
+        for branch in filtered_branches:
+            branch_dropdown['menu'].add_command(label=branch, command=tk._setit(selected_branch, branch))
+
+    # Create the dropdown list with autocomplete feature
+    branch_dropdown = tk.OptionMenu(hr_options_window, selected_branch, *branch_names, command=update_dropdown)
+    branch_dropdown.pack()
+
+    # Select branch button
+    select_branch_button = tk.Button(hr_options_window, text="Select Branch", command=lambda: print(selected_branch.get()))
+    select_branch_button.pack()
+
+    # Run the HR options window
+    hr_options_window.mainloop()
+    
 # Create the login screen
 def login_screen():
     def login():
