@@ -20,23 +20,50 @@ db = mysql.connector.connect(
 )
 
 def invalid_screen():
-    #Create a new window for displaying invalid credentials message
     invalid_window = tk.Tk()
     invalid_window.title("Invalid Credentials")
     invalid_window.geometry("250x100")
 
-    # Message label
-    invalid_label = tk.Label(invalid_window, text="Invalid Credentials. Please try again.", fg="red")
+    invalid_label = tk.Label(invalid_window, text="Invalid Credentials. Please try again.", fg="red", **labelStyle)
     invalid_label.pack(pady=10)
 
-    # OK button to close the window
-    ok_button = tk.Button(invalid_window, text="OK", command=invalid_window.destroy)
+    ok_button = tk.Button(invalid_window, text="OK", command=invalid_window.destroy, **buttonStyle)
     ok_button.pack()
 
-    # Run the invalid credentials window
     invalid_window.mainloop()
 
+def open_staff_roles_window(selected_branch):
+    staff_roles_window = tk.Toplevel(window)
+    staff_roles_window.title(f"Staff Roles - {selected_branch}")
+
+    # Heading frame for "Staff Roles"
+    heading_roles_frame = tk.Frame(staff_roles_window)
+    heading_roles_frame.pack(side=tk.TOP, pady=10)
+
+    # Heading label for "Staff Roles"
+    heading_roles_label = tk.Label(heading_roles_frame, text="Staff Roles", font=('Helvetica', 16, 'bold'))
+    heading_roles_label.pack(side=tk.LEFT, padx=10)
+
+    # Buttons frame for the buttons
+    buttons_frame = tk.Frame(staff_roles_window)
+    buttons_frame.pack(side=tk.TOP, pady=10)
+
+    # Create buttons in the buttons frame
+    def button_click(role):
+        print(f"Selected {role} at {selected_branch} branch!")
+
+    button_waiting_staff = tk.Button(buttons_frame, text="Waiting Staff", command=lambda: button_click("Waiting Staff"), font=('Helvetica', 12, 'bold'), height=2, width=15)
+    button_manager = tk.Button(buttons_frame, text="Manager", command=lambda: button_click("Manager"), font=('Helvetica', 12, 'bold'), height=2, width=15)
+    button_kitchen_staff = tk.Button(buttons_frame, text="Kitchen Staff", command=lambda: button_click("Kitchen Staff"), font=('Helvetica', 12, 'bold'), height=2, width=15)
+
+    # Pack buttons into the buttons frame and center them
+    button_waiting_staff.pack(side=tk.LEFT, padx=10)
+    button_manager.pack(side=tk.LEFT, padx=10)
+    button_kitchen_staff.pack(side=tk.LEFT, padx=10)
+
 def open_hr_options_window():
+    window.withdraw()
+
     hr_options_window = tk.Toplevel(window)
     hr_options_window.title("HR Director branches")
     hr_options_window.geometry("400x300")
@@ -61,11 +88,19 @@ def open_hr_options_window():
     branch_dropdown = tk.OptionMenu(hr_options_window, selected_branch, *branch_names, command=update_dropdown)
     branch_dropdown.pack(pady=10)
 
-    select_branch_button = tk.Button(hr_options_window, text="Select Branch", command=lambda: print(selected_branch.get()), **buttonStyle)
+    def select_branch():
+        chosen_branch = selected_branch.get()
+        print(f"Selected Branch: {chosen_branch}")
+        open_staff_roles_window(chosen_branch)
+
+    select_branch_button = tk.Button(hr_options_window, text="Select Branch", command=select_branch, **buttonStyle)
     select_branch_button.pack(pady=10)
 
-    hr_options_window.mainloop()
-    
+    hr_options_window.protocol("WM_DELETE_WINDOW", on_hr_options_window_close)
+
+def on_hr_options_window_close():
+    window.destroy()
+
 def login_screen():
     def login():
         email = username_entry.get()
