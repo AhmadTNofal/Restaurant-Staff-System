@@ -77,6 +77,8 @@ def open_staff_roles_window(selected_branch_info):
 
     buttons_frame = tk.Frame(staff_roles_window)
     buttons_frame.pack(side=tk.TOP, pady=10)
+    back_button = tk.Button(staff_roles_window, text="Back", command=lambda: [staff_roles_window.destroy(), open_hr_options_window()], **buttonStyle)
+    back_button.pack(side=tk.BOTTOM, pady=10)
 
     def button_click(role):
         show_staff(selected_branch_info, role, staff_roles_window)
