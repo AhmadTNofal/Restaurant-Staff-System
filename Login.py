@@ -62,13 +62,13 @@ def add_branch_window():
 
 def get_next_branch_id():
     cursor = db.cursor(buffered=True)
-    cursor.execute("SELECT BranchID FROM Branch ORDER BY BranchID DESC ")
+    cursor.execute("SELECT * FROM group1_asd.branch ORDER BY CAST(SUBSTRING(BranchID, 2) AS UNSIGNED) DESC;")
     last_branch_id_result = cursor.fetchone()
     if last_branch_id_result:
         last_branch_id = last_branch_id_result[0]  
         last_num = int(last_branch_id[1:])  # Assuming the ID format is 'B' followed by a number 
         new_num = last_num + 1 # Increment the number by 1
-        return f"B{new_num+1}" # Return the new branch ID
+        return f"B{new_num}" # Return the new branch ID
     else:
         return "B1"  # If no branches are found, start with 'B1'
 
