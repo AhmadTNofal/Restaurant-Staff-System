@@ -1,6 +1,7 @@
 import tkinter as tk
 import tkinter.font as tkFont
 import mysql.connector
+from tkinter import messagebox
 
 # Initialize the main window
 window = tk.Tk()
@@ -36,6 +37,55 @@ def invalid_screen():
     # Run the invalid credentials window
     invalid_window.mainloop()
 
+def add_branch_window():
+    new_branch_window = tk.Toplevel(window)
+    new_branch_window.title("Add New Branch")
+
+    # Entry for City
+    tk.Label(new_branch_window, text="City:", **labelStyle).pack(pady=5)
+    city_entry = tk.Entry(new_branch_window, **entryStyle)
+    city_entry.pack(pady=5)
+
+    # Entry for PostCode
+    tk.Label(new_branch_window, text="PostCode:", **labelStyle).pack(pady=5)
+    postcode_entry = tk.Entry(new_branch_window, **entryStyle)
+    postcode_entry.pack(pady=5)
+
+    # Entry for NumberOfTables
+    tk.Label(new_branch_window, text="Number of Tables:", **labelStyle).pack(pady=5)
+    num_tables_entry = tk.Entry(new_branch_window, **entryStyle)
+    num_tables_entry.pack(pady=5)
+
+    # Save button for new branch
+    save_button = tk.Button(new_branch_window, text="Save Branch", command=lambda: save_new_branch(city_entry.get(), postcode_entry.get(), num_tables_entry.get()), **buttonStyle)
+    save_button.pack(pady=10)
+
+def get_next_branch_id():
+    cursor = db.cursor(buffered=True)
+    cursor.execute("SELECT BranchID FROM Branch ORDER BY BranchID DESC ")
+    last_branch_id_result = cursor.fetchone()
+    if last_branch_id_result:
+        last_branch_id = last_branch_id_result[0]  
+        last_num = int(last_branch_id[1:])  # Assuming the ID format is 'B' followed by a number 
+        new_num = last_num + 1 # Increment the number by 1
+        return f"B{new_num+1}" # Return the new branch ID
+    else:
+        return "B1"  # If no branches are found, start with 'B1'
+
+def save_new_branch(city, postcode, num_tables):
+    try:
+        new_branch_id = get_next_branch_id()
+        num_tables = int(num_tables)  # Convert number of tables to an integer
+        cursor = db.cursor(buffered=True)
+        insert_query = "INSERT INTO Branch (BranchID, City, PostCode, NumberOfTables) VALUES (%s, %s, %s, %s)"
+        cursor.execute(insert_query, (new_branch_id, city, postcode, num_tables))
+        db.commit()  # Commit the changes to the database
+        tk.messagebox.showinfo("Success", "New branch added successfully!")
+    except ValueError:
+        tk.messagebox.showerror("Error", "Number of tables must be an integer.")
+    except Exception as e:
+        tk.messagebox.showerror("Error", str(e))
+        db.rollback()  # Rollback in case of error
 
 def show_staff(selected_branch_info, role, previous_window):
     # Close the previous window (staff roles window)
@@ -107,6 +157,8 @@ def open_hr_options_window():
 
     selected_branch = tk.StringVar(hr_options_window)
     selected_branch.set(branch_names[0])
+    add_branch_button = tk.Button(hr_options_window, text="Add New Branch", command=add_branch_window, **buttonStyle)
+    add_branch_button.pack(pady=10)
 
     def update_dropdown(*args):
         search_term = selected_branch.get()
@@ -167,3 +219,4 @@ def login_screen():
     window.mainloop()
 
 login_screen()
+
