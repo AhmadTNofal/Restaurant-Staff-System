@@ -458,5 +458,8 @@ def login_screen():
 
     window.mainloop()
 
+# Run the login screen
 login_screen()
 
+# Close the database connection when the window is closed
+db.close()
