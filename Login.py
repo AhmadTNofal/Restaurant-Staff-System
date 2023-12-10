@@ -85,7 +85,8 @@ def save_new_branch(city, postcode, num_tables):
         insert_query = "INSERT INTO Branch (BranchID, City, PostCode, NumberOfTables) VALUES (%s, %s, %s, %s)"
         cursor.execute(insert_query, (new_branch_id, city, postcode, num_tables))
         db.commit()  # Commit the changes to the database
-        tk.messagebox.showinfo("Success", "New branch added successfully!")
+        tk.messagebox.showinfo("Success", f"Branch {new_branch_id} successfully added.")
+        select_branch()
     except ValueError:
         tk.messagebox.showerror("Error", "Number of tables must be an integer.")
     except Exception as e:
@@ -158,12 +159,11 @@ def select_branch():
     cursor.execute(branch_query)
     branch_results = cursor.fetchall()
 
-    branch_names = [f"{city}, {postcode}" for city, postcode in branch_results]
+    branch_names = sorted([f"{city}, {postcode}" for city, postcode in branch_results])
 
     selected_branch = tk.StringVar(hr_options_window)
     selected_branch.set(branch_names[0])
-    add_branch_button = tk.Button(hr_options_window, text="Add New Branch", command=lambda: add_branch_window(hr_options_window), **buttonStyle)
-    add_branch_button.pack(pady=10)
+
 
     def update_dropdown(*args):
         search_term = selected_branch.get()
@@ -184,6 +184,11 @@ def select_branch():
     select_branch_button.pack(pady=10)
 
     hr_options_window.protocol("WM_DELETE_WINDOW", select_branch_close)
+
+    # Add new branch button
+    add_branch_button = tk.Button(hr_options_window, text="Add New Branch", command=lambda: add_branch_window(hr_options_window), **buttonStyle)
+    add_branch_button.pack(pady=10)
+    
 
 def login_screen():
     def login():
