@@ -1,5 +1,6 @@
 import tkinter as tk
 import tkinter.font as tkFont
+from tkinter import ttk
 import mysql.connector
 from tkinter import messagebox
 
@@ -69,10 +70,24 @@ def remove_branch(branch_info, parent_window):
     try:
         city, postcode = branch_info.split(", ")
         cursor = db.cursor(buffered=True)
-        delete_query = "DELETE FROM Branch WHERE City = %s AND PostCode = %s"
-        cursor.execute(delete_query, (city, postcode))
+
+        # First, delete all staff associated with this branch
+        delete_staff_query = """
+            DELETE FROM Account 
+            WHERE BranchID IN (
+                SELECT BranchID 
+                FROM Branch 
+                WHERE City = %s AND PostCode = %s
+            )
+        """
+        cursor.execute(delete_staff_query, (city, postcode))
+        
+        # Then, delete the branch
+        delete_branch_query = "DELETE FROM Branch WHERE City = %s AND PostCode = %s"
+        cursor.execute(delete_branch_query, (city, postcode))
+
         db.commit()
-        tk.messagebox.showinfo("Success", f"Branch in {city}, {postcode} successfully removed.")
+        tk.messagebox.showinfo("Success", f"Branch in {city}, {postcode} and all associated staff successfully removed.")
         parent_window.destroy()
         select_branch()
     except Exception as e:
@@ -166,9 +181,9 @@ def select_branch():
     window.withdraw()
 
     hr_options_window = tk.Toplevel(window)
-    hr_options_window.title("HR Director branches")
-    hr_options_window.geometry("400x300")
-    
+    hr_options_window.title("HR Director Branches")
+    hr_options_window.geometry("400x400")  # Adjusted for better layout
+
     cursor = db.cursor(buffered=True)
     branch_query = "SELECT City, PostCode FROM Branch"
     cursor.execute(branch_query)
@@ -177,17 +192,10 @@ def select_branch():
     branch_names = sorted([f"{city}, {postcode}" for city, postcode in branch_results])
 
     selected_branch = tk.StringVar(hr_options_window)
-    selected_branch.set(branch_names[0])
+    selected_branch.set(branch_names[0] if branch_names else "")
 
-
-    def update_dropdown(*args):
-        search_term = selected_branch.get()
-        filtered_branches = [branch for branch in branch_names if search_term.lower() in branch.lower()]
-        branch_dropdown['menu'].delete(0, 'end')
-        for branch in filtered_branches:
-            branch_dropdown['menu'].add_command(label=branch, command=tk._setit(selected_branch, branch))
-
-    branch_dropdown = tk.OptionMenu(hr_options_window, selected_branch, *branch_names, command=update_dropdown)
+    # Dropdown for selecting a branch
+    branch_dropdown = tk.OptionMenu(hr_options_window, selected_branch, *branch_names)
     branch_dropdown.pack(pady=10)
 
     def select_branch():
@@ -198,20 +206,24 @@ def select_branch():
     select_branch_button = tk.Button(hr_options_window, text="Select Branch", command=select_branch, **buttonStyle)
     select_branch_button.pack(pady=10)
 
-    hr_options_window.protocol("WM_DELETE_WINDOW", select_branch_close)
-    
+    # Separator
+    ttk.Separator(hr_options_window, orient='horizontal').pack(fill='x', pady=10)
+
+    # Dropdown for removing a branch
     selected_remove_branch = tk.StringVar(hr_options_window)
-    selected_remove_branch.set(branch_names[0])
-    # Add new branch button
+    selected_remove_branch.set(branch_names[0] if branch_names else "")
+    
     add_branch_button = tk.Button(hr_options_window, text="Add New Branch", command=lambda: add_branch_window(hr_options_window), **buttonStyle)
     add_branch_button.pack(pady=10)
-    
+    ttk.Separator(hr_options_window, orient='horizontal').pack(fill='x', pady=10)
     remove_branch_dropdown = tk.OptionMenu(hr_options_window, selected_remove_branch, *branch_names)
     remove_branch_dropdown.pack(pady=10)
 
     remove_branch_button = tk.Button(hr_options_window, text="Remove Branch", command=lambda: remove_branch(selected_remove_branch.get(), hr_options_window), **buttonStyle)
     remove_branch_button.pack(pady=10)
 
+    hr_options_window.protocol("WM_DELETE_WINDOW", select_branch_close)
+    
 def login_screen():
     def login():
         email = username_entry.get()
