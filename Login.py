@@ -185,7 +185,7 @@ def select_branch():
     hr_options_window.geometry("400x400")  # Adjusted for better layout
 
     cursor = db.cursor(buffered=True)
-    branch_query = "SELECT City, PostCode FROM Branch"
+    branch_query = "SELECT City, PostCode FROM Branch WHERE NOT BranchID = 'BM'"
     cursor.execute(branch_query)
     branch_results = cursor.fetchall()
 
