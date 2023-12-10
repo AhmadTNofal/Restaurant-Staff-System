@@ -20,7 +20,7 @@ db = mysql.connector.connect(
     database="group1_asd"
 )
 
-def on_hr_options_window_close():
+def select_branch_close():
     window.destroy()
 
 def invalid_screen():
@@ -37,7 +37,9 @@ def invalid_screen():
     # Run the invalid credentials window
     invalid_window.mainloop()
 
-def add_branch_window():
+def add_branch_window(parent_window):
+    parent_window.withdraw()
+
     new_branch_window = tk.Toplevel(window)
     new_branch_window.title("Add New Branch")
 
@@ -59,6 +61,9 @@ def add_branch_window():
     # Save button for new branch
     save_button = tk.Button(new_branch_window, text="Save Branch", command=lambda: save_new_branch(city_entry.get(), postcode_entry.get(), num_tables_entry.get()), **buttonStyle)
     save_button.pack(pady=10)
+
+    back_button = tk.Button(new_branch_window, text="Back", command=lambda: [new_branch_window.destroy(), parent_window.deiconify()], **buttonStyle)
+    back_button.pack(pady=10)
 
 def get_next_branch_id():
     cursor = db.cursor(buffered=True)
@@ -127,7 +132,7 @@ def open_staff_roles_window(selected_branch_info):
 
     buttons_frame = tk.Frame(staff_roles_window)
     buttons_frame.pack(side=tk.TOP, pady=10)
-    back_button = tk.Button(staff_roles_window, text="Back", command=lambda: [staff_roles_window.destroy(), open_hr_options_window()], **buttonStyle)
+    back_button = tk.Button(staff_roles_window, text="Back", command=lambda: [staff_roles_window.destroy(), select_branch()], **buttonStyle)
     back_button.pack(side=tk.BOTTOM, pady=10)
 
     def button_click(role):
@@ -141,7 +146,7 @@ def open_staff_roles_window(selected_branch_info):
     button_manager.pack(side=tk.LEFT, padx=10)
     button_kitchen_staff.pack(side=tk.LEFT, padx=10)
 
-def open_hr_options_window():
+def select_branch():
     window.withdraw()
 
     hr_options_window = tk.Toplevel(window)
@@ -157,7 +162,7 @@ def open_hr_options_window():
 
     selected_branch = tk.StringVar(hr_options_window)
     selected_branch.set(branch_names[0])
-    add_branch_button = tk.Button(hr_options_window, text="Add New Branch", command=add_branch_window, **buttonStyle)
+    add_branch_button = tk.Button(hr_options_window, text="Add New Branch", command=lambda: add_branch_window(hr_options_window), **buttonStyle)
     add_branch_button.pack(pady=10)
 
     def update_dropdown(*args):
@@ -178,7 +183,7 @@ def open_hr_options_window():
     select_branch_button = tk.Button(hr_options_window, text="Select Branch", command=select_branch, **buttonStyle)
     select_branch_button.pack(pady=10)
 
-    hr_options_window.protocol("WM_DELETE_WINDOW", on_hr_options_window_close)
+    hr_options_window.protocol("WM_DELETE_WINDOW", select_branch_close)
 
 def login_screen():
     def login():
@@ -193,7 +198,7 @@ def login_screen():
         if account_result:
             role = account_result[0]
             if role == 'Director':
-                open_hr_options_window()
+                select_branch()
             else:
                 print(f"Login successful! Role: {role}")
                 # Here, you would redirect to other role-specific interfaces
