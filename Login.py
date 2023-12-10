@@ -24,6 +24,7 @@ def select_branch_close():
     window.destroy()
 
 def invalid_screen():
+
      #Create a new window for displaying invalid credentials message
     invalid_window = tk.Tk()
     invalid_window.title("Invalid Credentials")
@@ -58,12 +59,25 @@ def add_branch_window(parent_window):
     num_tables_entry = tk.Entry(new_branch_window, **entryStyle)
     num_tables_entry.pack(pady=5)
 
-    # Save button for new branch
-    save_button = tk.Button(new_branch_window, text="Save Branch", command=lambda: save_new_branch(city_entry.get(), postcode_entry.get(), num_tables_entry.get()), **buttonStyle)
+    save_button = tk.Button(new_branch_window, text="Save Branch", command=lambda: save_new_branch(city_entry.get(), postcode_entry.get(), num_tables_entry.get(), new_branch_window), **buttonStyle)
     save_button.pack(pady=10)
 
     back_button = tk.Button(new_branch_window, text="Back", command=lambda: [new_branch_window.destroy(), parent_window.deiconify()], **buttonStyle)
     back_button.pack(pady=10)
+
+def remove_branch(branch_info, parent_window):
+    try:
+        city, postcode = branch_info.split(", ")
+        cursor = db.cursor(buffered=True)
+        delete_query = "DELETE FROM Branch WHERE City = %s AND PostCode = %s"
+        cursor.execute(delete_query, (city, postcode))
+        db.commit()
+        tk.messagebox.showinfo("Success", f"Branch in {city}, {postcode} successfully removed.")
+        parent_window.destroy()
+        select_branch()
+    except Exception as e:
+        tk.messagebox.showerror("Error", str(e))
+        db.rollback()
 
 def get_next_branch_id():
     cursor = db.cursor(buffered=True)
@@ -71,21 +85,22 @@ def get_next_branch_id():
     last_branch_id_result = cursor.fetchone()
     if last_branch_id_result:
         last_branch_id = last_branch_id_result[0]  
-        last_num = int(last_branch_id[1:])  # Assuming the ID format is 'B' followed by a number 
-        new_num = last_num + 1 # Increment the number by 1
-        return f"B{new_num}" # Return the new branch ID
+        last_num = int(last_branch_id[1:])
+        new_num = last_num + 1
+        return f"B{new_num}"
     else:
-        return "B1"  # If no branches are found, start with 'B1'
+        return "B1"
 
-def save_new_branch(city, postcode, num_tables):
+def save_new_branch(city, postcode, num_tables, new_branch_window):
     try:
         new_branch_id = get_next_branch_id()
-        num_tables = int(num_tables)  # Convert number of tables to an integer
+        num_tables = int(num_tables)
         cursor = db.cursor(buffered=True)
         insert_query = "INSERT INTO Branch (BranchID, City, PostCode, NumberOfTables) VALUES (%s, %s, %s, %s)"
         cursor.execute(insert_query, (new_branch_id, city, postcode, num_tables))
-        db.commit()  # Commit the changes to the database
+        db.commit()
         tk.messagebox.showinfo("Success", f"Branch {new_branch_id} successfully added.")
+        new_branch_window.destroy()
         select_branch()
     except ValueError:
         tk.messagebox.showerror("Error", "Number of tables must be an integer.")
@@ -184,11 +199,18 @@ def select_branch():
     select_branch_button.pack(pady=10)
 
     hr_options_window.protocol("WM_DELETE_WINDOW", select_branch_close)
-
+    
+    selected_remove_branch = tk.StringVar(hr_options_window)
+    selected_remove_branch.set(branch_names[0])
     # Add new branch button
     add_branch_button = tk.Button(hr_options_window, text="Add New Branch", command=lambda: add_branch_window(hr_options_window), **buttonStyle)
     add_branch_button.pack(pady=10)
     
+    remove_branch_dropdown = tk.OptionMenu(hr_options_window, selected_remove_branch, *branch_names)
+    remove_branch_dropdown.pack(pady=10)
+
+    remove_branch_button = tk.Button(hr_options_window, text="Remove Branch", command=lambda: remove_branch(selected_remove_branch.get(), hr_options_window), **buttonStyle)
+    remove_branch_button.pack(pady=10)
 
 def login_screen():
     def login():
