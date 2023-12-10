@@ -6,6 +6,8 @@ from tkinter import messagebox
 
 # Initialize the main window
 window = tk.Tk()
+window.state('zoomed')
+# window.attributes('-fullscreen', True)  # Uncomment this for Linux/Mac
 
 # Create font styles after initializing the main window
 fontStyle = tkFont.Font(family="Arial", size=12)
@@ -44,6 +46,8 @@ def add_branch_window(parent_window):
 
     new_branch_window = tk.Toplevel(window)
     new_branch_window.title("Add New Branch")
+    new_branch_window.state("zoomed")
+    # new_branch_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
 
     # Entry for City
     tk.Label(new_branch_window, text="City:", **labelStyle).pack(pady=5)
@@ -153,11 +157,15 @@ def manager_options(selected_branch_info, previous_window):
 
     manager_options_window = tk.Toplevel(window)
     manager_options_window.title(f"Manager Options - {selected_branch_info}")
+    manager_options_window.state('zoomed')
+    # manager_options_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
 
     # Define functionalities for each button (placeholder functions)
     def show_all_staff():
         all_staff_window = tk.Toplevel(window)
         all_staff_window.title("All Staff")
+        all_staff_window.state('zoomed')
+        # all_staff_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
 
         cursor = db.cursor(buffered=True)
         all_staff_query = """
@@ -179,6 +187,8 @@ def manager_options(selected_branch_info, previous_window):
     def add_staff():
         add_staff_window = tk.Toplevel(window)
         add_staff_window.title("Add Staff")
+        add_staff_window.state('zoomed')
+        # add_staff_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
 
         # Entry fields for staff details
         forename_label = tk.Label(add_staff_window, text="Forename:", font=fontStyle)
@@ -251,11 +261,15 @@ def manager_options(selected_branch_info, previous_window):
 
         submit_button = tk.Button(add_staff_window, text="Submit", command=submit_staff_details, **buttonStyle)
         submit_button.pack()
+        back_button = tk.Button(add_staff_window, text="Back", command=add_staff_window.destroy, **buttonStyle)
+        back_button.pack(pady=10)
 
 
     def remove_staff():
         remove_staff_window = tk.Toplevel(window)
         remove_staff_window.title("Remove Staff")
+        remove_staff_window.state('zoomed')
+        # remove_staff_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
 
         # Fetch staff details from the database
         staff_query = """
@@ -291,8 +305,12 @@ def manager_options(selected_branch_info, previous_window):
 
             remove_button = tk.Button(remove_staff_window, text="Remove Staff", command=remove_selected_staff, **buttonStyle)
             remove_button.pack()
+            back_button = tk.Button(remove_staff_window, text="Back", command=remove_staff_window.destroy, **buttonStyle)
+            back_button.pack(pady=10)
         else:
             tk.Label(remove_staff_window, text="No staff found to remove.", font=fontStyle).pack()
+            back_button = tk.Button(remove_staff_window, text="Back", command=remove_staff_window.destroy, **buttonStyle)
+            back_button.pack(pady=10)
 
     def show_reports():
         pass  # Implement the functionality
@@ -315,7 +333,9 @@ def manager_options(selected_branch_info, previous_window):
 def open_staff_roles_window(selected_branch_info):
     staff_roles_window = tk.Toplevel(window)
     staff_roles_window.title(f"Staff Roles - {selected_branch_info}")
-
+    staff_roles_window.state('zoomed')
+    # staff_roles_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+    
     heading_roles_frame = tk.Frame(staff_roles_window)
     heading_roles_frame.pack(side=tk.TOP, pady=10)
 
@@ -346,7 +366,8 @@ def select_branch():
 
     hr_options_window = tk.Toplevel(window)
     hr_options_window.title("HR Director Branches")
-    hr_options_window.geometry("400x400")  # Adjusted for better layout
+    hr_options_window.state('zoomed')
+    # hr_options_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
 
     cursor = db.cursor(buffered=True)
     branch_query = "SELECT City, PostCode FROM Branch WHERE NOT BranchID = 'BM'"
