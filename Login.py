@@ -173,8 +173,8 @@ def open_staff_roles_window(selected_branch_info):
     button_manager = tk.Button(buttons_frame, text="Manager", command=lambda: button_click("Manager"), font=('Helvetica', 12, 'bold'), height=2, width=15)
     button_kitchen_staff = tk.Button(buttons_frame, text="Kitchen Staff", command=lambda: button_click("Kitchen Staff"), font=('Helvetica', 12, 'bold'), height=2, width=15)
     
-    button_waiting_staff.pack(side=tk.LEFT, padx=10)
     button_manager.pack(side=tk.LEFT, padx=10)
+    button_waiting_staff.pack(side=tk.LEFT, padx=10)
     button_kitchen_staff.pack(side=tk.LEFT, padx=10)
 
 def select_branch():
