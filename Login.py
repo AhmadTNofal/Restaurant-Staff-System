@@ -315,20 +315,24 @@ def manager_options(selected_branch_info, previous_window):
     def show_reports():
         pass  # Implement the functionality
 
-    # Create buttons
-    show_all_staff_button = tk.Button(manager_options_window, text="Show all staff", command=lambda: show_staff(selected_branch_info), **buttonStyle)
-    add_staff_button = tk.Button(manager_options_window, text="Add staff", command=add_staff, **buttonStyle)
-    remove_staff_button = tk.Button(manager_options_window, text="Remove staff", command=remove_staff, **buttonStyle)
-    show_reports_button = tk.Button(manager_options_window, text="Show reports", command=show_reports, **buttonStyle)
+    # Center frame for holding the buttons
+    center_frame = tk.Frame(manager_options_window)
+    center_frame.pack(expand=True)
 
-    # Pack buttons
-    show_all_staff_button.pack(pady=5)
-    add_staff_button.pack(pady=5)
-    remove_staff_button.pack(pady=5)
-    show_reports_button.pack(pady=5)
+    # Create buttons with the same style as in open_staff_roles_window
+    show_all_staff_button = tk.Button(center_frame, text="Show all staff", command=lambda: show_staff(selected_branch_info), font=('Helvetica', 12, 'bold'), height=2, width=15)
+    add_staff_button = tk.Button(center_frame, text="Add staff", command=add_staff, font=('Helvetica', 12, 'bold'), height=2, width=15)
+    remove_staff_button = tk.Button(center_frame, text="Remove staff", command=remove_staff, font=('Helvetica', 12, 'bold'), height=2, width=15)
+    show_reports_button = tk.Button(center_frame, text="Show reports", command=show_reports, font=('Helvetica', 12, 'bold'), height=2, width=15)
+
+    # Pack buttons in the center frame
+    show_all_staff_button.grid(row=0, column=0, padx=10, pady=10)
+    add_staff_button.grid(row=0, column=1, padx=10, pady=10)
+    remove_staff_button.grid(row=0, column=2, padx=10, pady=10)
+    show_reports_button.grid(row=0, column=3, padx=10, pady=10)
 
     back_button = tk.Button(manager_options_window, text="Back", command=lambda: [manager_options_window.destroy(), open_staff_roles_window(selected_branch_info)], **buttonStyle)
-    back_button.pack(pady=10)
+    back_button.pack(side=tk.BOTTOM, pady=10)
 
 def open_staff_roles_window(selected_branch_info):
     staff_roles_window = tk.Toplevel(window)
