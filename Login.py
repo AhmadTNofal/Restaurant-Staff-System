@@ -123,33 +123,194 @@ def save_new_branch(city, postcode, num_tables, new_branch_window):
         tk.messagebox.showerror("Error", str(e))
         db.rollback()  # Rollback in case of error
 
-def show_staff(selected_branch_info, role, previous_window):
+def show_staff(selected_branch_info):
+    all_staff_window = tk.Toplevel(window)
+    city, postcode = selected_branch_info.split(", ")
+    all_staff_window.title(f"All Staff in {city} - {postcode}")
+
+    cursor = db.cursor(buffered=True)
+    all_staff_query = """
+        SELECT Account.AccountID, Account.ForeName, Account.SurName, Account.Role
+        FROM Account
+        JOIN Branch ON Account.BranchID = Branch.BranchID
+        WHERE Branch.City = %s AND Branch.PostCode = %s
+    """
+    cursor.execute(all_staff_query, (city, postcode))
+    all_staff_results = cursor.fetchall()
+
+    if all_staff_results:
+        for account_id, forename, surname, role in all_staff_results:
+            tk.Label(all_staff_window, text=f"{account_id}. {forename} {surname} - {role}", font=fontStyle).pack(pady=2)
+    else:
+        tk.Label(all_staff_window, text=f"No staff found in {city} - {postcode}.", font=fontStyle).pack(pady=10)
+
+    back_button = tk.Button(all_staff_window, text="Back", command=all_staff_window.destroy, **buttonStyle)
+    back_button.pack(pady=10)
+
+def manager_options(selected_branch_info, previous_window):
     # Close the previous window (staff roles window)
     previous_window.destroy()
 
-    staff_window = tk.Toplevel(window)
-    city, postcode = selected_branch_info.split(", ")
-    staff_window.title(f"{role} in {city} - {postcode}")
+    manager_options_window = tk.Toplevel(window)
+    manager_options_window.title(f"Manager Options - {selected_branch_info}")
 
-    cursor = db.cursor(buffered=True)
-    staff_query = """
-        SELECT AccountID, ForeName, SurName 
-        FROM Account 
-        JOIN Branch ON Account.BranchID = Branch.BranchID 
-        WHERE Branch.City = %s AND Branch.PostCode = %s AND Account.Role = %s
-    """
-    cursor.execute(staff_query, (city, postcode, role))
-    staff_results = cursor.fetchall()
+    # Define functionalities for each button (placeholder functions)
+    def show_all_staff():
+        all_staff_window = tk.Toplevel(window)
+        all_staff_window.title("All Staff")
 
-    if staff_results:
-        for idx, (account_id, forename, surname) in enumerate(staff_results):
-            tk.Label(staff_window, text=f"{account_id}. {forename} {surname}", font=fontStyle).pack(pady=2)
-    else:
-        tk.Label(staff_window, text=f"No staff found for role '{role}' at {city} - {postcode}.", font=fontStyle).pack(pady=10)
+        cursor = db.cursor(buffered=True)
+        all_staff_query = """
+            SELECT AccountID, ForeName, SurName, Role
+            FROM Account
+        """
+        cursor.execute(all_staff_query)
+        all_staff_results = cursor.fetchall()
 
-    # Back button to return to the staff roles window
-    back_button = tk.Button(staff_window, text="Back", command=lambda: [staff_window.destroy(), open_staff_roles_window(selected_branch_info)], **buttonStyle)
-    back_button.pack()
+        if all_staff_results:
+            for account_id, forename, surname, role in all_staff_results:
+                tk.Label(all_staff_window, text=f"{account_id}. {forename} {surname} - {role}", font=fontStyle).pack(pady=2)
+        else:
+            tk.Label(all_staff_window, text="No staff found.", font=fontStyle).pack(pady=10)
+
+        back_button = tk.Button(all_staff_window, text="Back", command=all_staff_window.destroy, **buttonStyle)
+        back_button.pack(pady=10)
+
+    def add_staff():
+        add_staff_window = tk.Toplevel(window)
+        add_staff_window.title("Add Staff")
+
+        # Entry fields for staff details
+        forename_label = tk.Label(add_staff_window, text="Forename:", font=fontStyle)
+        forename_label.pack()
+        forename_entry = tk.Entry(add_staff_window, font=fontStyle)
+        forename_entry.pack()
+
+        surname_label = tk.Label(add_staff_window, text="Surname:", font=fontStyle)
+        surname_label.pack()
+        surname_entry = tk.Entry(add_staff_window, font=fontStyle)
+        surname_entry.pack()
+
+        email_label = tk.Label(add_staff_window, text="Email:", font=fontStyle)
+        email_label.pack()
+        email_entry = tk.Entry(add_staff_window, font=fontStyle)
+        email_entry.pack()
+
+        # Password entry with hidden input
+        password_label = tk.Label(add_staff_window, text="Password:", font=fontStyle)
+        password_label.pack()
+        password_entry = tk.Entry(add_staff_window, font=fontStyle, show="*")
+        password_entry.pack()
+
+        # Dropdown for role selection
+        role_label = tk.Label(add_staff_window, text="Role:", font=fontStyle)
+        role_label.pack()
+        role_var = tk.StringVar(add_staff_window)
+        role_options = ['Manager', 'Waiting Staff', 'Kitchen Staff']
+        role_var.set(role_options[0])  # set default value
+        role_dropdown = tk.OptionMenu(add_staff_window, role_var, *role_options)
+        role_dropdown.pack()
+
+        # Submit function
+        def submit_staff_details():
+            forename = forename_entry.get()
+            surname = surname_entry.get()
+            email = email_entry.get()
+            password = password_entry.get()
+            role = role_var.get()
+            city, postcode = selected_branch_info.split(", ")
+
+            # Generate Account ID based on role
+            account_id_prefix = {'Manager': 'M', 'Waiting Staff': 'W', 'Kitchen Staff': 'K'}
+            prefix = account_id_prefix[role]
+
+            # Find the last account ID for the selected role and increment it
+            find_last_id_query = f"SELECT MAX(AccountID) FROM Account WHERE AccountID LIKE '{prefix}%'"
+            cursor = db.cursor()
+            cursor.execute(find_last_id_query)
+            last_id_row = cursor.fetchone()
+            last_id = last_id_row[0] if last_id_row and last_id_row[0] else prefix + "0"
+            new_id_number = int(last_id.lstrip(prefix)) + 1
+            new_account_id = prefix + str(new_id_number)
+
+            # Insert into database (adjust according to your schema)
+            insert_query = """
+                INSERT INTO Account (AccountID, ForeName, SurName, Email, Password, Role, BranchID)
+                SELECT %s, %s, %s, %s, %s, %s, Branch.BranchID
+                FROM Branch
+                WHERE Branch.City = %s AND Branch.PostCode = %s
+            """
+            try:
+                cursor.execute(insert_query, (new_account_id, forename, surname, email, password, role, city, postcode))
+                db.commit()
+                messagebox.showinfo("Success", f"Account for {forename} {surname} (ID: {new_account_id}) has been successfully created.")
+            except Exception as e:
+                messagebox.showerror("Error", f"An error occurred: {e}")
+            finally:
+                add_staff_window.destroy()
+
+        submit_button = tk.Button(add_staff_window, text="Submit", command=submit_staff_details, **buttonStyle)
+        submit_button.pack()
+
+
+    def remove_staff():
+        remove_staff_window = tk.Toplevel(window)
+        remove_staff_window.title("Remove Staff")
+
+        # Fetch staff details from the database
+        staff_query = """
+            SELECT AccountID, ForeName, SurName
+            FROM Account
+            JOIN Branch ON Account.BranchID = Branch.BranchID
+            WHERE Branch.City = %s AND Branch.PostCode = %s
+        """
+        city, postcode = selected_branch_info.split(", ")
+        cursor = db.cursor()
+        cursor.execute(staff_query, (city, postcode))
+        staff_results = cursor.fetchall()
+
+        # Create a list of staff for the dropdown
+        staff_list = [f"{row[0]}: {row[1]} {row[2]}" for row in staff_results] if staff_results else []
+
+        if staff_list:
+            staff_var = tk.StringVar(remove_staff_window)
+            staff_var.set(staff_list[0])  # Set default value
+            staff_dropdown = tk.OptionMenu(remove_staff_window, staff_var, *staff_list)
+            staff_dropdown.pack()
+
+            def remove_selected_staff():
+                selected = staff_var.get().split(":")[0]  # Extract AccountID
+                delete_query = "DELETE FROM Account WHERE AccountID = %s"
+                try:
+                    cursor.execute(delete_query, (selected,))
+                    db.commit()
+                    messagebox.showinfo("Success", f"Staff member with ID {selected} has been removed.")
+                    remove_staff_window.destroy()
+                except Exception as e:
+                    messagebox.showerror("Error", f"An error occurred: {e}")
+
+            remove_button = tk.Button(remove_staff_window, text="Remove Staff", command=remove_selected_staff, **buttonStyle)
+            remove_button.pack()
+        else:
+            tk.Label(remove_staff_window, text="No staff found to remove.", font=fontStyle).pack()
+
+    def show_reports():
+        pass  # Implement the functionality
+
+    # Create buttons
+    show_all_staff_button = tk.Button(manager_options_window, text="Show all staff", command=lambda: show_staff(selected_branch_info), **buttonStyle)
+    add_staff_button = tk.Button(manager_options_window, text="Add staff", command=add_staff, **buttonStyle)
+    remove_staff_button = tk.Button(manager_options_window, text="Remove staff", command=remove_staff, **buttonStyle)
+    show_reports_button = tk.Button(manager_options_window, text="Show reports", command=show_reports, **buttonStyle)
+
+    # Pack buttons
+    show_all_staff_button.pack(pady=5)
+    add_staff_button.pack(pady=5)
+    remove_staff_button.pack(pady=5)
+    show_reports_button.pack(pady=5)
+
+    back_button = tk.Button(manager_options_window, text="Back", command=lambda: [manager_options_window.destroy(), open_staff_roles_window(selected_branch_info)], **buttonStyle)
+    back_button.pack(pady=10)
 
 def open_staff_roles_window(selected_branch_info):
     staff_roles_window = tk.Toplevel(window)
@@ -167,7 +328,10 @@ def open_staff_roles_window(selected_branch_info):
     back_button.pack(side=tk.BOTTOM, pady=10)
 
     def button_click(role):
-        show_staff(selected_branch_info, role, staff_roles_window)
+        if role == "Manager":
+            manager_options(selected_branch_info, staff_roles_window)
+        else:
+            show_staff(selected_branch_info, role, staff_roles_window)
 
     button_waiting_staff = tk.Button(buttons_frame, text="Waiting Staff", command=lambda: button_click("Waiting Staff"), font=('Helvetica', 12, 'bold'), height=2, width=15)
     button_manager = tk.Button(buttons_frame, text="Manager", command=lambda: button_click("Manager"), font=('Helvetica', 12, 'bold'), height=2, width=15)
