@@ -406,6 +406,12 @@ def select_branch():
 
     remove_branch_button = tk.Button(hr_options_window, text="Remove Branch", command=lambda: remove_branch(selected_remove_branch.get(), hr_options_window), **buttonStyle)
     remove_branch_button.pack(pady=10)
+    def logout():
+        hr_options_window.destroy()
+        window.deiconify()
+
+    logout_button = tk.Button(hr_options_window, text="Logout", command=logout, **buttonStyle)
+    logout_button.pack(pady=10)
 
     hr_options_window.protocol("WM_DELETE_WINDOW", select_branch_close)
     
@@ -430,7 +436,8 @@ def login_screen():
             invalid_screen()
 
     window.title("Login")
-    window.geometry("350x220")
+    window.state('zoomed')
+    # window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
 
     username_label = tk.Label(window, text="Email:", **labelStyle)
     username_label.pack(pady=5)
