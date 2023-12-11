@@ -512,6 +512,37 @@ def manager_options(selected_branch_info, previous_window):
     back_button = tk.Button(manager_options_window, text="Back", command=lambda: [manager_options_window.destroy(), open_staff_roles_window(selected_branch_info)], **buttonStyle)
     back_button.pack(side=tk.BOTTOM, pady=10)
 
+def waiting_staff_options(selected_branch_info, previous_window):
+    # Close the previous window
+    previous_window.destroy()
+
+    waiting_staff_window = tk.Toplevel(window)
+    waiting_staff_window.title(f"Waiting Staff Options - {selected_branch_info}")
+    waiting_staff_window.state('zoomed')
+    # waiting_staff_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+    # Center frame for holding the buttons
+    center_frame = tk.Frame(waiting_staff_window)
+    center_frame.pack(expand=True)
+
+    # Define functionalities for each button (placeholder functions)
+    def take_order():
+        pass  # Implement the functionality for taking orders
+
+    def book_reservation():
+        pass  # Implement the functionality for booking reservations
+
+    # Create buttons
+    take_order_button = tk.Button(center_frame, text="Take Order", command=take_order, font=('Helvetica', 12, 'bold'), height=2, width=15)
+    book_reservation_button = tk.Button(center_frame, text="Book Reservation", command=book_reservation, font=('Helvetica', 12, 'bold'), height=2, width=15)
+
+    # Pack buttons in the center frame
+    take_order_button.grid(row=0, column=0, padx=10, pady=10)
+    book_reservation_button.grid(row=0, column=1, padx=10, pady=10)
+
+    back_button = tk.Button(center_frame, text="Back", command=lambda: [waiting_staff_window.destroy(), open_staff_roles_window(selected_branch_info)], **buttonStyle)
+    back_button.grid(row=1, column=0, columnspan=2, pady=10)
+
 def open_staff_roles_window(selected_branch_info):
     staff_roles_window = tk.Toplevel(window)
     staff_roles_window.title(f"Staff Roles - {selected_branch_info}")
@@ -532,6 +563,8 @@ def open_staff_roles_window(selected_branch_info):
     def button_click(role):
         if role == "Manager":
             manager_options(selected_branch_info, staff_roles_window)
+        elif role == "Waiting Staff":
+            waiting_staff_options(selected_branch_info, staff_roles_window)
         else:
             show_staff(selected_branch_info, role, staff_roles_window)
 
@@ -610,7 +643,7 @@ def login_screen():
         if account_result:
             role = account_result[0]
             if role == 'Director':
-                select_branch()
+                select_branch()  
             else:
                 print(f"Login successful! Role: {role}")
                 # Here, you would redirect to other role-specific interfaces
