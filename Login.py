@@ -326,8 +326,15 @@ def manager_options(selected_branch_info, previous_window):
         stock_center_frame.pack(expand=True)
         # stock_options_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
 
+        # Define functionalities for each button 
         view_stock_button = tk.Button(stock_center_frame, text="View Stock", command=lambda: view_stock(selected_branch_info), font=('Helvetica', 12, 'bold'), height=2, width=15)
+        add_stock_button = tk.Button(stock_center_frame, text="Add Stock", command=lambda: add_stock(selected_branch_info), font=('Helvetica', 12, 'bold'), height=2, width=15)
+        remove_stock_button = tk.Button(stock_center_frame, text="Remove Stock", command=lambda: remove_stock(selected_branch_info), font=('Helvetica', 12, 'bold'), height=2, width=15)
+        
+        # Pack buttons in the center frame
         view_stock_button.grid(row=0, column=0, padx=10, pady=10)
+        add_stock_button.grid(row=0, column=1, padx=10, pady=10)
+        remove_stock_button.grid(row=0, column=2, padx=10, pady=10)
 
         # Back button to go back to the previous window
         back_button = tk.Button(stock_options_window, text="Back", command=stock_options_window.destroy, **buttonStyle)
@@ -363,7 +370,127 @@ def manager_options(selected_branch_info, previous_window):
 
         back_button = tk.Button(view_stock_window, text="Back", command=view_stock_window.destroy, **buttonStyle)
         back_button.pack(pady=10)
+    
+    def add_stock(selected_branch_info):
+        # Close the previous window (stock options window)
+        previous_window.destroy()
+
+        add_stock_window = tk.Toplevel(window)
+        add_stock_window.title("Add Stock")
+        add_stock_window.state('zoomed')
+        # add_stock_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+        # Extract city and postcode from the selected_branch_info
+        city, postcode = selected_branch_info.split(", ")
+
+        # Entry fields for stock details
+        stock_type_label = tk.Label(add_stock_window, text="Stock Type:", font=fontStyle)
+        stock_type_label.pack()
+        stock_type_entry = tk.Entry(add_stock_window, font=fontStyle)
+        stock_type_entry.pack()
+
+        amount_in_stock_label = tk.Label(add_stock_window, text="Amount in Stock:", font=fontStyle)
+        amount_in_stock_label.pack()
+        amount_in_stock_entry = tk.Entry(add_stock_window, font=fontStyle)
+        amount_in_stock_entry.pack()
+
+        price_label = tk.Label(add_stock_window, text="Price:", font=fontStyle)
+        price_label.pack()
+        price_entry = tk.Entry(add_stock_window, font=fontStyle)
+        price_entry.pack()
+
+        # Submit function
+        def submit_stock_details():
+            stock_type = stock_type_entry.get()
+            amount_in_stock = amount_in_stock_entry.get()
+            price = price_entry.get()
+
+            # Generate Stock ID based on the last StockID
+            cursor = db.cursor()
+            cursor.execute("SELECT MAX(StockID) FROM Stock")
+            last_stock_id_row = cursor.fetchone()
+            last_stock_id = last_stock_id_row[0] if last_stock_id_row and last_stock_id_row[0] else "S0"
+            new_stock_id_number = int(last_stock_id.lstrip("S")) + 1
+            new_stock_id = "S" + str(new_stock_id_number)
+
+            # Insert into database (adjust according to your schema)
+            insert_query = """
+                INSERT INTO Stock (StockID, StockType, AmountInStock, Price, BranchID)
+                SELECT %s, %s, %s, %s, Branch.BranchID
+                FROM Branch
+                WHERE Branch.City = %s AND Branch.PostCode = %s
+            """
+            try:
+                cursor.execute(insert_query, (new_stock_id, stock_type, amount_in_stock, price, city, postcode))
+                db.commit()
+                messagebox.showinfo("Success", f"Stock {new_stock_id} successfully added.")
+            except Exception as e:
+                messagebox.showerror("Error", f"An error occurred: {e}")
+            finally:
+                add_stock_window.destroy()
+                stock_options(selected_branch_info)
+
+        submit_button = tk.Button(add_stock_window, text="Submit", command=submit_stock_details, **buttonStyle)
+        submit_button.pack()
+        back_button = tk.Button(add_stock_window, text="Back", command=add_stock_window.destroy, **buttonStyle)
+        back_button.pack(pady=10)
+
+    def remove_stock(selected_branch_info):
+        # Close the previous window (stock options window)
+        previous_window.destroy()
+
+        remove_stock_window = tk.Toplevel(window)
+        remove_stock_window.title("Remove Stock")
+        remove_stock_window.state('zoomed')
+        # remove_stock_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+        # Extract city and postcode from the selected_branch_info
+        city, postcode = selected_branch_info.split(", ")
+
+        # Fetch stock details from the database
+        stock_query = """
+            SELECT StockID, StockType
+            FROM Stock
+            WHERE BranchID = (
+                SELECT BranchID
+                FROM Branch
+                WHERE City = %s AND PostCode = %s
+            )
+        """
+        cursor = db.cursor()
+        cursor.execute(stock_query, (city, postcode))
+        stock_results = cursor.fetchall()
+
+        # Create a list of stock for the dropdown
+        stock_list = [f"{row[0]}: {row[1]}" for row in stock_results] if stock_results else []
+
+        if stock_list:
+            stock_var = tk.StringVar(remove_stock_window)
+            stock_var.set(stock_list[0])
+            stock_dropdown = tk.OptionMenu(remove_stock_window, stock_var, *stock_list)
+            stock_dropdown.pack()
+    
+            def remove_selected_stock():
+                selected = stock_var.get().split(":")[0]
+                delete_query = "DELETE FROM Stock WHERE StockID = %s"
+                try:
+                    cursor.execute(delete_query, (selected,))
+                    db.commit()
+                    messagebox.showinfo("Success", f"Stock {selected} has been removed.")
+                    remove_stock_window.destroy()
+                except Exception as e:
+                    messagebox.showerror("Error", f"An error occurred: {e}")
             
+            remove_button = tk.Button(remove_stock_window, text="Remove Stock", command=remove_selected_stock, **buttonStyle)
+            remove_button.pack()
+            back_button = tk.Button(remove_stock_window, text="Back", command=remove_stock_window.destroy, **buttonStyle)
+            back_button.pack(pady=10)
+        else:
+            tk.Label(remove_stock_window, text="No stock found to remove.", font=fontStyle).pack()
+            back_button = tk.Button(remove_stock_window, text="Back", command=remove_stock_window.destroy, **buttonStyle)
+            back_button.pack(pady=10)
+            
+
     # Center frame for holding the buttons
     center_frame = tk.Frame(manager_options_window)
     center_frame.pack(expand=True)
