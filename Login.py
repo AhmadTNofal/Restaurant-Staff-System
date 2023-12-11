@@ -528,7 +528,7 @@ def waiting_staff_options(selected_branch_info, previous_window):
     # Define functionalities for each button (placeholder functions)
     def order():
         order_window = tk.Toplevel(window)
-        order_window.title("Take Order")
+        order_window.title("Order")
         order_window.state('zoomed')
         # take_order_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
 
@@ -556,12 +556,195 @@ def waiting_staff_options(selected_branch_info, previous_window):
         back_button.pack(pady=10)
 
 
-    def book_reservation():
-        pass  # Implement the functionality for booking reservations
+    def reservation():
+        reservation_window = tk.Toplevel(window)
+        reservation_window.title("Reservation")
+        reservation_window.state('zoomed')
+        # reservation_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+        def take_reservation():
+            # Create a new window for taking reservation
+            take_reservation_window = tk.Toplevel(window)
+            take_reservation_window.title("Take Reservation")
+            take_reservation_window.state('zoomed')
+            # take_reservation_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+            # Entry fields for reservation details
+            customer_name_label = tk.Label(take_reservation_window, text="Customer Name:", font=fontStyle)
+            customer_name_label.pack()
+            customer_name_entry = tk.Entry(take_reservation_window, font=fontStyle)
+            customer_name_entry.pack()
+
+            #customer phone number entry
+            customer_phone_label = tk.Label(take_reservation_window, text="Customer Phone Number:", font=fontStyle)
+            customer_phone_label.pack()
+            customer_phone_entry = tk.Entry(take_reservation_window, font=fontStyle)
+            customer_phone_entry.pack()
+
+            #date entry
+            date_label = tk.Label(take_reservation_window, text="Date:", font=fontStyle)
+            date_label.pack()
+            date_entry = tk.Entry(take_reservation_window, font=fontStyle)
+            date_entry.pack()
+
+            #time entry
+            time_label = tk.Label(take_reservation_window, text="Time:", font=fontStyle)
+            time_label.pack()
+            time_entry = tk.Entry(take_reservation_window, font=fontStyle)
+            time_entry.pack()
+
+            #get branch id from selected branch info
+            city, postcode = selected_branch_info.split(", ")
+            cursor = db.cursor(buffered=True)
+            branch_query = "SELECT BranchID FROM Branch WHERE City = %s AND PostCode = %s"
+            cursor.execute(branch_query, (city, postcode))
+            branch_result = cursor.fetchone()
+            branch_id = branch_result[0]
+
+            #create unique reservation id
+            reservation_id_prefix = 'R'
+            find_last_id_query = f"SELECT MAX(ReservationID) FROM Reservation WHERE ReservationID LIKE '{reservation_id_prefix}%'"
+            cursor = db.cursor()
+            cursor.execute(find_last_id_query)
+            last_id_row = cursor.fetchone()
+            last_id = last_id_row[0] if last_id_row and last_id_row[0] else reservation_id_prefix + "0"
+            new_id_number = int(last_id.lstrip(reservation_id_prefix)) + 1
+            new_reservation_id = reservation_id_prefix + str(new_id_number)
+
+            # Submit function
+            def submit_reservation_details():
+                customer_name = customer_name_entry.get()
+                customer_phone = customer_phone_entry.get()
+                date = date_entry.get()
+                time = time_entry.get()
+
+                # Insert into database
+                insert_query = """
+                    INSERT INTO Reservation (ReservationID, CustomerName, CustomerPhoneNO, Date, Time, BranchID)
+                    SELECT %s, %s, %s, %s, %s, %s 
+                """
+                try:
+                    cursor.execute(insert_query, (new_reservation_id, customer_name, customer_phone, date, time, branch_id))
+                    db.commit()
+                    messagebox.showinfo("Success", f"Reservation {new_reservation_id} successfully added.")
+                except Exception as e:
+                    messagebox.showerror("Error", f"An error occurred: {e}")
+
+            submit_button = tk.Button(take_reservation_window, text="Submit", command=submit_reservation_details, **buttonStyle)
+            submit_button.pack()
+            back_button = tk.Button(take_reservation_window, text="Back", command=take_reservation_window.destroy, **buttonStyle)
+            back_button.pack(pady=10)
+
+        def view_reservations():
+            # Create a new window for viewing reservation
+            view_reservation_window = tk.Toplevel(window)
+            view_reservation_window.title("View Reservation")
+            view_reservation_window.state('zoomed')
+            # view_reservation_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+            #get branch id from selected branch info
+            city, postcode = selected_branch_info.split(", ")
+            cursor = db.cursor(buffered=True)
+            branch_query = "SELECT BranchID FROM Branch WHERE City = %s AND PostCode = %s"
+            cursor.execute(branch_query, (city, postcode))
+            branch_result = cursor.fetchone()
+            branch_id = branch_result[0]
+
+            #fetch reservation details from the database
+            reservation_query = """
+                SELECT ReservationID, CustomerName, CustomerPhoneNO, Date, Time
+                FROM Reservation
+                WHERE BranchID = %s
+            """
+            cursor = db.cursor()
+            cursor.execute(reservation_query, (branch_id,))
+            reservation_results = cursor.fetchall()
+
+            # show all the reservations in the window
+            if reservation_results:
+                for reservation_id, customer_name, customer_phone, date, time in reservation_results:
+                    reservation_info = f"{reservation_id}: {customer_name} - {customer_phone} - {date} - {time}"
+                    tk.Label(view_reservation_window, text=reservation_info, font=fontStyle).pack()
+            else:
+                tk.Label(view_reservation_window, text="No reservation found for this branch.", font=fontStyle).pack()
+
+            back_button = tk.Button(view_reservation_window, text="Back", command=view_reservation_window.destroy, **buttonStyle)
+            back_button.pack(pady=10)
+
+        def cancel_reservation():
+            # Create a new window for canceling reservation
+            cancel_reservation_window = tk.Toplevel(window)
+            cancel_reservation_window.title("Cancel Reservation")
+            cancel_reservation_window.state('zoomed')
+            # cancel_reservation_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+            #get branch id from selected branch info
+            city, postcode = selected_branch_info.split(", ")
+            cursor = db.cursor(buffered=True)
+            branch_query = "SELECT BranchID FROM Branch WHERE City = %s AND PostCode = %s"
+            cursor.execute(branch_query, (city, postcode))
+            branch_result = cursor.fetchone()
+            branch_id = branch_result[0]
+
+            #fetch reservation details from the database
+            reservation_query = """
+                SELECT ReservationID, CustomerName, CustomerPhoneNO, Date, Time
+                FROM Reservation
+                WHERE BranchID = %s
+            """
+            cursor = db.cursor()
+            cursor.execute(reservation_query, (branch_id,))
+            reservation_results = cursor.fetchall()
+
+            # Create a list of reservations for the dropdown
+            reservation_list = [f"{row[0]}: {row[1]} - {row[2]} - {row[3]} - {row[4]}" for row in reservation_results] if reservation_results else []
+
+            if reservation_list:
+                reservation_var = tk.StringVar(cancel_reservation_window)
+                reservation_var.set(reservation_list[0])
+                reservation_dropdown = tk.OptionMenu(cancel_reservation_window, reservation_var, *reservation_list)
+                reservation_dropdown.pack()
+
+                def cancel_selected_reservation():
+                    selected = reservation_var.get().split(":")[0]
+                    delete_query = "DELETE FROM Reservation WHERE ReservationID = %s"
+                    try:
+                        cursor.execute(delete_query, (selected,))
+                        db.commit()
+                        messagebox.showinfo("Success", f"Reservation {selected} has been canceled.")
+                        cancel_reservation_window.destroy()
+                    except Exception as e:
+                        messagebox.showerror("Error", f"An error occurred: {e}")
+
+                cancel_button = tk.Button(cancel_reservation_window, text="Cancel Reservation", command=cancel_selected_reservation, **buttonStyle)
+                cancel_button.pack()
+                back_button = tk.Button(cancel_reservation_window, text="Back", command=cancel_reservation_window.destroy, **buttonStyle)
+                back_button.pack(pady=10)
+            else:
+                tk.Label(cancel_reservation_window, text="No reservation found to cancel.", font=fontStyle).pack()
+                back_button = tk.Button(cancel_reservation_window, text="Back", command=cancel_reservation_window.destroy, **buttonStyle)
+                back_button.pack(pady=10)
+
+
+        # 3 buttons for taking reservation, viewing reservations, and cancel reservation
+        take_reservation_button = tk.Button(reservation_window, text="Take Reservation", command=lambda: [reservation_window.destroy(), take_reservation()], font=('Helvetica', 12, 'bold'), height=2, width=15)
+        view_reservations_button = tk.Button(reservation_window, text="View Reservations", command=lambda: [reservation_window.destroy(), view_reservations()], font=('Helvetica', 12, 'bold'), height=2, width=15)
+        cancel_reservation_button = tk.Button(reservation_window, text="Cancel Reservation", command=lambda: [reservation_window.destroy(), cancel_reservation()], font=('Helvetica', 12, 'bold'), height=2, width=15)
+
+        # Pack buttons in the center frame
+        take_reservation_button.pack(pady=10)
+        view_reservations_button.pack(pady=10)
+        cancel_reservation_button.pack(pady=10)
+
+        #back button to go back to the previous window
+        back_button = tk.Button(reservation_window, text="Back", command=lambda: [reservation_window.destroy(), waiting_staff_options(selected_branch_info, waiting_staff_window)], **buttonStyle)
+        back_button.pack(pady=10)
+
+
 
     # Create buttons
-    take_order_button = tk.Button(center_frame, text="Order", command=order, font=('Helvetica', 12, 'bold'), height=2, width=15)
-    book_reservation_button = tk.Button(center_frame, text="Book Reservation", command=book_reservation, font=('Helvetica', 12, 'bold'), height=2, width=15)
+    take_order_button = tk.Button(center_frame, text="Orders", command=order, font=('Helvetica', 12, 'bold'), height=2, width=15)
+    book_reservation_button = tk.Button(center_frame, text="Reservations", command=reservation, font=('Helvetica', 12, 'bold'), height=2, width=15)
 
     # Pack buttons in the center frame
     take_order_button.grid(row=0, column=0, padx=10, pady=10)
