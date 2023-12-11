@@ -526,14 +526,41 @@ def waiting_staff_options(selected_branch_info, previous_window):
     center_frame.pack(expand=True)
 
     # Define functionalities for each button (placeholder functions)
-    def take_order():
-        pass  # Implement the functionality for taking orders
+    def order():
+        order_window = tk.Toplevel(window)
+        order_window.title("Take Order")
+        order_window.state('zoomed')
+        # take_order_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+        def take_order():
+            pass    # Implement the functionality for taking orders
+
+        def view_orders():
+            pass # Implement the functionality for viewing orders
+
+        def print_receipt():
+            pass # Implement the functionality for printing receipts
+
+        # 3 buttons for taking order, viewing orders, and print recipt
+        take_order_button = tk.Button(order_window, text="Take Order", command=lambda: [order_window.destroy(), take_order()], font=('Helvetica', 12, 'bold'), height=2, width=15)
+        view_orders_button = tk.Button(order_window, text="View Orders", command=lambda: [order_window.destroy(), view_orders()], font=('Helvetica', 12, 'bold'), height=2, width=15)
+        print_receipt_button = tk.Button(order_window, text="Print Receipt", command=lambda: [order_window.destroy(), print_receipt()], font=('Helvetica', 12, 'bold'), height=2, width=15)
+
+        # Pack buttons in the center frame
+        take_order_button.pack(pady=10)
+        view_orders_button.pack(pady=10)
+        print_receipt_button.pack(pady=10)
+
+        #back button to go back to the previous window
+        back_button = tk.Button(order_window, text="Back", command=lambda: [order_window.destroy(), waiting_staff_options(selected_branch_info, waiting_staff_window)], **buttonStyle)
+        back_button.pack(pady=10)
+
 
     def book_reservation():
         pass  # Implement the functionality for booking reservations
 
     # Create buttons
-    take_order_button = tk.Button(center_frame, text="Take Order", command=take_order, font=('Helvetica', 12, 'bold'), height=2, width=15)
+    take_order_button = tk.Button(center_frame, text="Order", command=order, font=('Helvetica', 12, 'bold'), height=2, width=15)
     book_reservation_button = tk.Button(center_frame, text="Book Reservation", command=book_reservation, font=('Helvetica', 12, 'bold'), height=2, width=15)
 
     # Pack buttons in the center frame
