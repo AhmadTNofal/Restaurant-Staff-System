@@ -313,7 +313,57 @@ def manager_options(selected_branch_info, previous_window):
 
     def show_reports():
         pass  # Implement the functionality
+    
+    def stock_options():
+        # Close the previous window (manager options window)
+        previous_window.destroy()
+        
+        stock_options_window = tk.Toplevel(window)
+        stock_options_window.title(f"Stock Options - {selected_branch_info}")
+        stock_options_window.state('zoomed')
 
+        stock_center_frame = tk.Frame(stock_options_window)
+        stock_center_frame.pack(expand=True)
+        # stock_options_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+        view_stock_button = tk.Button(stock_center_frame, text="View Stock", command=lambda: view_stock(selected_branch_info), font=('Helvetica', 12, 'bold'), height=2, width=15)
+        view_stock_button.grid(row=0, column=0, padx=10, pady=10)
+
+        # Back button to go back to the previous window
+        back_button = tk.Button(stock_options_window, text="Back", command=stock_options_window.destroy, **buttonStyle)
+        back_button.pack(pady=10)
+
+    def view_stock(selected_branch_info):
+        view_stock_window = tk.Toplevel(window)
+        view_stock_window.title("View Stock")
+        view_stock_window.state('zoomed')
+
+        # Extract city and postcode from the selected_branch_info
+        city, postcode = selected_branch_info.split(", ")
+
+        stock_query = """
+            SELECT StockID, StockType, AmountInStock, Price
+            FROM Stock
+            WHERE BranchID = (
+                SELECT BranchID
+                FROM Branch
+                WHERE City = %s AND PostCode = %s
+            )
+        """
+        cursor = db.cursor()
+        cursor.execute(stock_query, (city, postcode))
+        stock_results = cursor.fetchall()
+
+        if stock_results:
+            for stock_id, stock_type, amount_in_stock, price in stock_results:
+                stock_info = f"{stock_id}: {stock_type} - {amount_in_stock} in stock - £{price}"
+                tk.Label(view_stock_window, text=stock_info, font=fontStyle).pack()
+        else:
+            tk.Label(view_stock_window, text="No stock found for this branch.", font=fontStyle).pack()
+
+        back_button = tk.Button(view_stock_window, text="Back", command=view_stock_window.destroy, **buttonStyle)
+        back_button.pack(pady=10)
+            
     # Center frame for holding the buttons
     center_frame = tk.Frame(manager_options_window)
     center_frame.pack(expand=True)
@@ -322,13 +372,15 @@ def manager_options(selected_branch_info, previous_window):
     show_all_staff_button = tk.Button(center_frame, text="Show all staff", command=lambda: show_staff(selected_branch_info), font=('Helvetica', 12, 'bold'), height=2, width=15)
     add_staff_button = tk.Button(center_frame, text="Add staff", command=add_staff, font=('Helvetica', 12, 'bold'), height=2, width=15)
     remove_staff_button = tk.Button(center_frame, text="Remove staff", command=remove_staff, font=('Helvetica', 12, 'bold'), height=2, width=15)
+    stock_options_button = tk.Button(center_frame, text="Stock", command=stock_options, font=('Helvetica', 12, 'bold'), height=2, width=15)
     show_reports_button = tk.Button(center_frame, text="Show reports", command=show_reports, font=('Helvetica', 12, 'bold'), height=2, width=15)
 
     # Pack buttons in the center frame
     show_all_staff_button.grid(row=0, column=0, padx=10, pady=10)
     add_staff_button.grid(row=0, column=1, padx=10, pady=10)
     remove_staff_button.grid(row=0, column=2, padx=10, pady=10)
-    show_reports_button.grid(row=0, column=3, padx=10, pady=10)
+    stock_options_button.grid(row=0, column=3, padx=10, pady=10)
+    show_reports_button.grid(row=0, column=4, padx=10, pady=10)
 
     back_button = tk.Button(manager_options_window, text="Back", command=lambda: [manager_options_window.destroy(), open_staff_roles_window(selected_branch_info)], **buttonStyle)
     back_button.pack(side=tk.BOTTOM, pady=10)
