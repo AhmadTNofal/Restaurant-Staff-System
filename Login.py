@@ -264,7 +264,6 @@ def manager_options(selected_branch_info, previous_window):
         back_button = tk.Button(add_staff_window, text="Back", command=add_staff_window.destroy, **buttonStyle)
         back_button.pack(pady=10)
 
-
     def remove_staff():
         remove_staff_window = tk.Toplevel(window)
         remove_staff_window.title("Remove Staff")
