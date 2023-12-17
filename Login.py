@@ -3,7 +3,8 @@ import tkinter.font as tkFont
 from tkinter import ttk
 import mysql.connector
 from tkinter import messagebox
-
+from PIL import Image, ImageTk
+from PIL import Image, ImageEnhance
 # Initialize the main window
 window = tk.Tk()
 window.state('zoomed')
@@ -11,7 +12,7 @@ window.state('zoomed')
 
 # Create font styles after initializing the main window
 fontStyle = tkFont.Font(family="Arial", size=12)
-buttonStyle = {"font": fontStyle, "bg": "blue", "fg": "white"}
+buttonStyle = {"font": fontStyle, "bg": "darkgreen", "fg": "white", "bd": 2, "relief": "raised"}
 labelStyle = {"font": fontStyle, "fg": "black"}
 entryStyle = {"font": fontStyle, "fg": "black", "bd": 2}
 
@@ -869,19 +870,93 @@ def login_screen():
     window.title("Login")
     window.state('zoomed')
     # window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+    def on_enter(e):
+        login_button.config(bg='lightgrey')
 
-    username_label = tk.Label(window, text="Email:", **labelStyle)
-    username_label.pack(pady=5)
-    username_entry = tk.Entry(window, width=30, **entryStyle)
-    username_entry.pack(pady=5)
+    # Function to revert the button style on leave
+    def on_leave(e):
+        login_button.config(bg='SystemButtonFace')
+    
+    def help_on_enter(e):
+            help_button.config(bg='gray')  # Change color on hover
 
-    password_label = tk.Label(window, text="Password:", **labelStyle)
-    password_label.pack(pady=5)
-    password_entry = tk.Entry(window, show="*", width=30, **entryStyle)
-    password_entry.pack(pady=5)
+    def help_on_leave(e):
+        help_button.config(bg='lightgrey') 
+    def open_help():
+        help_window = tk.Toplevel(window)
+        help_window.title("Help")
+        help_window.geometry("400x300")  # Adjust size as needed
 
-    login_button = tk.Button(window, text="Login", command=login, **buttonStyle)
-    login_button.pack(pady=10)
+        # Text area for comments
+        comment_text = tk.Text(help_window, height=10, width=40)
+        comment_text.pack(pady=10)
+        def submit_comment():
+            comment = comment_text.get("1.0", "end-1c")
+            print("Comment submitted:", comment)  # Replace with actual processing logic
+            help_window.destroy()
+        submit_button = tk.Button(help_window, text="Submit Comment", command=submit_comment)
+        submit_button.pack(pady=10)
+    window_width = 500
+    window_height = 400
+    screen_width = window.winfo_screenwidth()
+    screen_height = window.winfo_screenheight()
+    center_x = int(screen_width / 2 - window_width / 2)
+    center_y = int(screen_height / 2 - window_height / 2)
+    window.geometry(f'{window_width}x{window_height}+{center_x}+{center_y}')
+
+    # Create a top border
+    top_border = tk.Frame(window, bg='black', height=95)  # Reduced height
+    top_border.pack(side='top', fill='x')
+    top_border.pack_propagate(0)
+    # Add a help button to the top border
+    help_font = tkFont.Font(family="Arial", size=25, weight="bold")
+    help_button = tk.Button(top_border, text="Help", command=open_help, font=help_font, bg='white', relief='groove', bd=2)
+    help_button.pack(side='right', padx=10, pady=5)
+    help_button.bind("<Enter>", help_on_enter)
+    help_button.bind("<Leave>", help_on_leave)
+
+    # Load and add a logo to the top border
+    logo_image = Image.open("restt.png")  # Replace with your logo path
+    logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+    logo_photo = ImageTk.PhotoImage(logo_image)
+    logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+    logo_label.image = logo_photo  # Keep a reference
+    logo_label.pack(side='left', padx=10, pady=5)
+
+    
+    title_font = tkFont.Font(family="Arial", size=22, weight="bold")
+    title_label = tk.Label(window, text="Horizon Restaurant", font=title_font)
+    title_label.pack(pady=(5, 20))  # Adjust padding as needed
+
+    # Adjusted font sizes
+    customFont = tkFont.Font(family="Helvetica", size=16, weight="bold")
+    labelFont = tkFont.Font(family="Arial", size=14)
+
+    # Create a frame for the login box with increased padding and size
+    login_frame = tk.Frame(window, bg='white', bd=5, relief="groove", highlightthickness=0)
+    login_frame.place(relx=0.5, rely=0.5, anchor='center', width=400, height=300)  # Centered with specific size
+
+    # Configure grid layout inside login_frame
+    login_frame.columnconfigure(0, weight=1)
+    login_frame.rowconfigure([0, 1, 2, 3], weight=1)
+
+    # Username label and entry with adjusted padding
+    username_label = tk.Label(login_frame, text="Email:", bg='white', font=labelFont)
+    username_label.grid(row=0, column=0, pady=(15, 5), padx=20, sticky='ew')
+    username_entry = tk.Entry(login_frame, font=customFont, bd=3, relief="groove")
+    username_entry.grid(row=1, column=0, pady=5, padx=20, sticky='ew')
+
+    # Password label and entry with adjusted padding
+    password_label = tk.Label(login_frame, text="Password:", bg='white', font=labelFont)
+    password_label.grid(row=2, column=0, pady=5, padx=20, sticky='ew')
+    password_entry = tk.Entry(login_frame, show="*", font=customFont, bd=3, relief="groove")
+    password_entry.grid(row=3, column=0, pady=5, padx=20, sticky='ew')
+
+    # Login button with hover effect and adjusted padding
+    login_button = tk.Button(login_frame, text="Login", command=login, font=customFont, bd=3, relief="raised")
+    login_button.grid(row=4, column=0, pady=15, padx=20, sticky='ew')
+    login_button.bind("<Enter>", on_enter)
+    login_button.bind("<Leave>", on_leave)
 
     window.mainloop()
 
