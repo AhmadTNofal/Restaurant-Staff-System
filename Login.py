@@ -599,6 +599,9 @@ def waiting_staff_options(selected_branch_info, previous_window):
     back_button = tk.Button(center_frame, text="Back", command=lambda: [waiting_staff_window.destroy(), open_staff_roles_window(selected_branch_info)], **buttonStyle)
     back_button.grid(row=1, column=0, columnspan=2, pady=10)
 
+def kitchen_staff_options(selected_branch_info, previous_window):
+    pass  # Implement the functionality
+
 def open_staff_roles_window(selected_branch_info):
     staff_roles_window = tk.Toplevel(window)
     staff_roles_window.title(f"Staff Roles - {selected_branch_info}")

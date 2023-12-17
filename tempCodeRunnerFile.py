@@ -1,0 +1,1 @@
+mysqldevoyard.mysql.database.azure.com
