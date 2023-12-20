@@ -11,10 +11,34 @@ window.state('zoomed')
 # window.attributes('-fullscreen', True)  # Uncomment this for Linux/Mac
 
 # Create font styles after initializing the main window
-fontStyle = tkFont.Font(family="Arial", size=12)
-buttonStyle = {"font": fontStyle, "bg": "darkgreen", "fg": "white", "bd": 2, "relief": "raised"}
-labelStyle = {"font": fontStyle, "fg": "black"}
-entryStyle = {"font": fontStyle, "fg": "black", "bd": 2}
+fontStyle = tkFont.Font(family="Segoe UI", size=12)
+
+# Soft color scheme with consistent border and relief
+soft_grey = "#f0f0f0"
+dark_grey = "#303030"
+
+buttonStyle = {
+    "font": fontStyle, 
+    "bg": dark_grey, 
+    "fg": soft_grey, 
+    "bd": 2, 
+    "relief": "groove",
+    "padx": 5,
+    "pady": 5
+}
+
+labelStyle = {
+    "font": fontStyle, 
+    "fg": dark_grey,
+    "bg": "white"
+}
+
+entryStyle = {
+    "font": fontStyle, 
+    "fg": dark_grey, 
+    "bd": 2, 
+    "insertbackground": dark_grey  # Changes cursor color
+}
 
 # Connect to the database
 db = mysql.connector.connect(
@@ -130,6 +154,51 @@ def save_new_branch(city, postcode, num_tables, new_branch_window):
 
 def show_staff(selected_branch_info):
     all_staff_window = tk.Toplevel(window)
+    def help_on_enter(e):
+            help_button.config(bg='gray')  # Change color on hover
+
+    def help_on_leave(e):
+        help_button.config(bg='lightgrey') 
+    def open_help():
+        help_window = tk.Toplevel(window)
+        help_window.title("Help")
+        help_window.geometry("400x300")  # Adjust size as needed
+
+        # Text area for comments
+        comment_text = tk.Text(help_window, height=10, width=40)
+        comment_text.pack(pady=10)
+        def submit_comment():
+            comment = comment_text.get("1.0", "end-1c")
+            print("Comment submitted:", comment)  # Replace with actual processing logic
+            help_window.destroy()
+        submit_button = tk.Button(help_window, text="Submit Comment", command=submit_comment)
+        submit_button.pack(pady=10)
+    hr_options_window = tk.Toplevel(window)
+    hr_options_window.title("HR Director Branches")
+    hr_options_window.state('zoomed')
+
+    # hr_options_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+    top_border = tk.Canvas(hr_options_window, height=50, bg='black')
+    top_border.pack(side='top', fill='x')    
+    main_frame = tk.Frame(hr_options_window)
+    main_frame.pack(padx=20, pady=20)
+    title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+    title_label.pack(pady=(0, 10))
+    help_font = tkFont.Font(family="Arial", size=25, weight="bold")
+    help_button = tk.Button(top_border, text="Help", command=open_help, font=help_font, bg='white', relief='groove', bd=2)
+    help_button.pack(side='right', padx=10, pady=5)
+    help_button.bind("<Enter>", help_on_enter)
+    help_button.bind("<Leave>", help_on_leave)
+    center_frame = tk.Frame(hr_options_window)
+    center_frame.pack(expand=True)
+    center_frame.grid_columnconfigure(0, weight=1)
+    logo_image = Image.open("restt.png")  # Replace with your logo path
+    logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+    logo_photo = ImageTk.PhotoImage(logo_image)
+    logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+    logo_label.image = logo_photo  # Keep a reference
+    logo_label.pack(side='left', padx=10, pady=5)
+    
     city, postcode = selected_branch_info.split(", ")
     all_staff_window.title(f"All Staff in {city} - {postcode}")
 
@@ -608,6 +677,14 @@ def open_staff_roles_window(selected_branch_info):
     staff_roles_window.state('zoomed')
     # staff_roles_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
     
+    top_border = tk.Canvas(staff_roles_window, height=50, bg='black')
+    top_border.pack(side='top', fill='x') 
+    logo_image = Image.open("restt.png")  # Replace with your logo path
+    logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+    logo_photo = ImageTk.PhotoImage(logo_image)
+    logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+    logo_label.image = logo_photo  # Keep a reference
+    logo_label.pack(side='left', padx=10, pady=5)
     heading_roles_frame = tk.Frame(staff_roles_window)
     heading_roles_frame.pack(side=tk.TOP, pady=10)
 
@@ -798,12 +875,51 @@ def open_staff_roles_window(selected_branch_info):
 
 def select_branch():
     window.withdraw()
+    def help_on_enter(e):
+            help_button.config(bg='gray')  # Change color on hover
 
+    def help_on_leave(e):
+        help_button.config(bg='lightgrey') 
+    def open_help():
+        help_window = tk.Toplevel(window)
+        help_window.title("Help")
+        help_window.geometry("400x300")  # Adjust size as needed
+
+        # Text area for comments
+        comment_text = tk.Text(help_window, height=10, width=40)
+        comment_text.pack(pady=10)
+        def submit_comment():
+            comment = comment_text.get("1.0", "end-1c")
+            print("Comment submitted:", comment)  # Replace with actual processing logic
+            help_window.destroy()
+        submit_button = tk.Button(help_window, text="Submit Comment", command=submit_comment)
+        submit_button.pack(pady=10)
     hr_options_window = tk.Toplevel(window)
     hr_options_window.title("HR Director Branches")
     hr_options_window.state('zoomed')
-    # hr_options_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
 
+    # hr_options_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+    top_border = tk.Canvas(hr_options_window, height=50, bg='black')
+    top_border.pack(side='top', fill='x')    
+    main_frame = tk.Frame(hr_options_window)
+    main_frame.pack(padx=20, pady=20)
+    title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+    title_label.pack(pady=(0, 10))
+    help_font = tkFont.Font(family="Arial", size=25, weight="bold")
+    help_button = tk.Button(top_border, text="Help", command=open_help, font=help_font, bg='white', relief='groove', bd=2)
+    help_button.pack(side='right', padx=10, pady=5)
+    help_button.bind("<Enter>", help_on_enter)
+    help_button.bind("<Leave>", help_on_leave)
+    center_frame = tk.Frame(hr_options_window)
+    center_frame.pack(expand=True)
+    center_frame.grid_columnconfigure(0, weight=1)
+    logo_image = Image.open("restt.png")  # Replace with your logo path
+    logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+    logo_photo = ImageTk.PhotoImage(logo_image)
+    logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+    logo_label.image = logo_photo  # Keep a reference
+    logo_label.pack(side='left', padx=10, pady=5)
+    
     cursor = db.cursor(buffered=True)
     branch_query = "SELECT City, PostCode FROM Branch WHERE NOT BranchID = 'BM'"
     cursor.execute(branch_query)
@@ -815,38 +931,38 @@ def select_branch():
     selected_branch.set(branch_names[0] if branch_names else "")
 
     # Dropdown for selecting a branch
-    branch_dropdown = tk.OptionMenu(hr_options_window, selected_branch, *branch_names)
-    branch_dropdown.pack(pady=10)
-
+    branch_dropdown = tk.OptionMenu(center_frame, selected_branch, *branch_names)
+    branch_dropdown.grid(row=0, column=0, pady=10)
+    
     def select_branch():
         chosen_branch_info = selected_branch.get()
         open_staff_roles_window(chosen_branch_info)
         hr_options_window.destroy()
 
-    select_branch_button = tk.Button(hr_options_window, text="Select Branch", command=select_branch, **buttonStyle)
-    select_branch_button.pack(pady=10)
+    select_branch_button = tk.Button(center_frame, text="Select Branch", command=select_branch, **buttonStyle)
+    select_branch_button.grid(row=1, column=0, pady=10)
 
     # Separator
-    ttk.Separator(hr_options_window, orient='horizontal').pack(fill='x', pady=10)
+
 
     # Dropdown for removing a branch
     selected_remove_branch = tk.StringVar(hr_options_window)
     selected_remove_branch.set(branch_names[0] if branch_names else "")
     
-    add_branch_button = tk.Button(hr_options_window, text="Add New Branch", command=lambda: add_branch_window(hr_options_window), **buttonStyle)
-    add_branch_button.pack(pady=10)
-    ttk.Separator(hr_options_window, orient='horizontal').pack(fill='x', pady=10)
-    remove_branch_dropdown = tk.OptionMenu(hr_options_window, selected_remove_branch, *branch_names)
-    remove_branch_dropdown.pack(pady=10)
+    add_branch_button = tk.Button(center_frame, text="Add New Branch", command=lambda: add_branch_window(hr_options_window), **buttonStyle)
+    add_branch_button.grid(row=2, column=0, pady=10)
 
-    remove_branch_button = tk.Button(hr_options_window, text="Remove Branch", command=lambda: remove_branch(selected_remove_branch.get(), hr_options_window), **buttonStyle)
-    remove_branch_button.pack(pady=10)
+    remove_branch_dropdown = tk.OptionMenu(center_frame, selected_remove_branch, *branch_names)
+    remove_branch_dropdown.grid(row=3, column=0, pady=10)
+
+    remove_branch_button = tk.Button(center_frame, text="Remove Branch", command=lambda: remove_branch(selected_remove_branch.get(), hr_options_window), **buttonStyle)
+    remove_branch_button.grid(row=4, column=0, pady=10)
     def logout():
         hr_options_window.destroy()
         window.deiconify()
 
-    logout_button = tk.Button(hr_options_window, text="Logout", command=logout, **buttonStyle)
-    logout_button.pack(pady=10)
+    logout_button = tk.Button(center_frame, text="Logout", command=logout, **buttonStyle)
+    logout_button.grid(row=5, column=0, pady=10)
 
     hr_options_window.protocol("WM_DELETE_WINDOW", select_branch_close)
     
