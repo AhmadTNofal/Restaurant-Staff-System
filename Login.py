@@ -425,7 +425,6 @@ def waiting_staff_options(selected_branch_info, previous_window):
         back_button = tk.Button(order_window, text="Back", command=lambda: [order_window.destroy(), waiting_staff_options(selected_branch_info, waiting_staff_window)], **buttonStyle)
         back_button.pack(pady=10)
 
-
     def reservation():
         reservation_window = tk.Toplevel(window)
         reservation_window.title("Reservation")
