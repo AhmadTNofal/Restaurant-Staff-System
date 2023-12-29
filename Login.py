@@ -5,6 +5,7 @@ import mysql.connector
 from tkinter import messagebox
 from PIL import Image, ImageTk
 from PIL import Image, ImageEnhance
+
 # Initialize the main window
 window = tk.Tk()
 window.state('zoomed')
@@ -76,23 +77,23 @@ def remove_branch(branch_info, parent_window):
         city, postcode = branch_info.split(", ")
         cursor = db.cursor(buffered=True)
 
-        # First, delete all staff associated with this branch
-        delete_staff_query = """
-            DELETE FROM Account 
-            WHERE BranchID IN (
-                SELECT BranchID 
-                FROM Branch 
-                WHERE City = %s AND PostCode = %s
-            )
-        """
-        cursor.execute(delete_staff_query, (city, postcode))
-        
-        # Then, delete the branch
+        # First, retrieve the BranchID based on the city and postcode
+        get_branch_id_query = "SELECT BranchID FROM Branch WHERE City = %s AND PostCode = %s"
+        cursor.execute(get_branch_id_query, (city, postcode))
+        branch_result = cursor.fetchone()
+        if branch_result:
+            branch_id = branch_result[0]
+
+            # Then, delete all tables associated with this branch
+            delete_tables_query = "DELETE FROM Tables WHERE BranchID = %s"
+            cursor.execute(delete_tables_query, (branch_id,))
+
+        # Then, delete the branch itself
         delete_branch_query = "DELETE FROM Branch WHERE City = %s AND PostCode = %s"
         cursor.execute(delete_branch_query, (city, postcode))
 
         db.commit()
-        tk.messagebox.showinfo("Success", f"Branch in {city}, {postcode} and all associated staff successfully removed.")
+        tk.messagebox.showinfo("Success", f"Branch in {city}, {postcode} and all associated tables successfully removed.")
         parent_window.destroy()
         select_branch()
     except Exception as e:
@@ -111,22 +112,45 @@ def get_next_branch_id():
     else:
         return "B1"
 
-def save_new_branch(city, postcode, num_tables, new_branch_window):
+def add_tables_for_branch(branch_id, num_tables, cursor):
+    # Assuming the tables are identified with branch_id followed by a sequence number
+    # Example: B1-T1 for the first table in branch B1
+    for i in range(1, num_tables + 1):
+        table_id = f"{branch_id}-T{i}"
+        cursor.execute("INSERT INTO Tables (TableID, BranchID) VALUES (%s, %s)", (table_id, branch_id))
+
+def save_new_branch(city, postcode, num_tables_str, new_branch_window):
     try:
+        # Get the next branch ID
         new_branch_id = get_next_branch_id()
-        num_tables = int(num_tables)
-        cursor = db.cursor(buffered=True)
+        
+        # Convert the number of tables to an integer
+        num_tables = int(num_tables_str)
+        
+        # Insert the new branch into the Branch table
+        cursor = db.cursor()
         insert_query = "INSERT INTO Branch (BranchID, City, PostCode, NumberOfTables) VALUES (%s, %s, %s, %s)"
         cursor.execute(insert_query, (new_branch_id, city, postcode, num_tables))
+        
+        # Add tables for the new branch
+        add_tables_for_branch(new_branch_id, num_tables, cursor)
+        
+        # Commit the changes to the database
         db.commit()
-        tk.messagebox.showinfo("Success", f"Branch {new_branch_id} successfully added.")
+        tk.messagebox.showinfo("Success", f"Branch {new_branch_id} successfully added with {num_tables} tables.")
         new_branch_window.destroy()
         select_branch()
     except ValueError:
         tk.messagebox.showerror("Error", "Number of tables must be an integer.")
+    except mysql.connector.Error as err:
+        tk.messagebox.showerror("Error", f"Database error: {err}")
+        db.rollback()  # Rollback in case of error
     except Exception as e:
         tk.messagebox.showerror("Error", str(e))
         db.rollback()  # Rollback in case of error
+    finally:
+        if cursor is not None:
+            cursor.close()
 
 def show_staff(selected_branch_info):
     all_staff_window = tk.Toplevel(window)
