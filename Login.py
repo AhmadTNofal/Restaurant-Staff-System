@@ -432,7 +432,7 @@ def waiting_staff_options(selected_branch_info, previous_window):
         reservation_window.state('zoomed')
         # reservation_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
 
-        def take_reservation():
+        def take_reservation(selected_branch_info):
             # Create a new window for taking reservation
             take_reservation_window = tk.Toplevel(window)
             take_reservation_window.title("Take Reservation")
@@ -452,56 +452,92 @@ def waiting_staff_options(selected_branch_info, previous_window):
             customer_phone_entry.pack()
 
             #date entry
-            date_label = tk.Label(take_reservation_window, text="Date:", font=fontStyle)
+            date_label = tk.Label(take_reservation_window, text="Date (YYYY-MM-DD):", font=fontStyle)
             date_label.pack()
             date_entry = tk.Entry(take_reservation_window, font=fontStyle)
             date_entry.pack()
 
             #time entry
-            time_label = tk.Label(take_reservation_window, text="Time:", font=fontStyle)
+            time_label = tk.Label(take_reservation_window, text="Time (HH:MM):", font=fontStyle)
             time_label.pack()
             time_entry = tk.Entry(take_reservation_window, font=fontStyle)
             time_entry.pack()
 
-            #get branch id from selected branch info
+            # Function to fetch available tables
+            def get_available_tables(branch_id):
+                cursor = db.cursor()
+                cursor.execute("SELECT TableID FROM Tables WHERE BranchID = %s AND Availability = 1", (branch_id,))
+                return cursor.fetchall()
+
+            # Function to update table availability
+            def update_table_availability(table_id, availability):
+                cursor = db.cursor()
+                cursor.execute("UPDATE Tables SET Availability = %s WHERE TableID = %s", (availability, table_id))
+                cursor.close()
+
+            # Retrieve the BranchID from the selected branch info
             city, postcode = selected_branch_info.split(", ")
-            cursor = db.cursor(buffered=True)
-            branch_query = "SELECT BranchID FROM Branch WHERE City = %s AND PostCode = %s"
-            cursor.execute(branch_query, (city, postcode))
-            branch_result = cursor.fetchone()
-            branch_id = branch_result[0]
-
-            #create unique reservation id
-            reservation_id_prefix = 'R'
-            find_last_id_query = f"SELECT MAX(ReservationID) FROM Reservation WHERE ReservationID LIKE '{reservation_id_prefix}%'"
             cursor = db.cursor()
-            cursor.execute(find_last_id_query)
-            last_id_row = cursor.fetchone()
-            last_id = last_id_row[0] if last_id_row and last_id_row[0] else reservation_id_prefix + "0"
-            new_id_number = int(last_id.lstrip(reservation_id_prefix)) + 1
-            new_reservation_id = reservation_id_prefix + str(new_id_number)
+            cursor.execute("SELECT BranchID FROM Branch WHERE City = %s AND PostCode = %s", (city, postcode))
+            branch_id = cursor.fetchone()[0]
+            cursor.close()
 
-            # Submit function
+            # Dropdown for selecting a table
+            available_tables = get_available_tables(branch_id)
+            table_var = tk.StringVar(take_reservation_window)
+            table_var.set(available_tables[0][0] if available_tables else "No tables available")
+            table_dropdown_label = tk.Label(take_reservation_window, text="Available Tables:", font=fontStyle)
+            table_dropdown_label.pack()
+            table_dropdown = tk.OptionMenu(take_reservation_window, table_var, *[table[0] for table in available_tables])
+            table_dropdown.pack()
+
+            # Function to create a new reservation
             def submit_reservation_details():
                 customer_name = customer_name_entry.get()
                 customer_phone = customer_phone_entry.get()
                 date = date_entry.get()
                 time = time_entry.get()
+                selected_table = table_var.get()
 
-                # Insert into database
-                insert_query = """
-                    INSERT INTO Reservation (ReservationID, CustomerName, CustomerPhoneNO, Date, Time, BranchID)
-                    SELECT %s, %s, %s, %s, %s, %s 
-                """
+                if selected_table == "No tables available":
+                    messagebox.showerror("Error", "No available tables to reserve.")
+                    return
+
+                # Start transaction
+                cursor = db.cursor()
+                cursor.execute("START TRANSACTION")
                 try:
-                    cursor.execute(insert_query, (new_reservation_id, customer_name, customer_phone, date, time, branch_id))
-                    db.commit()
-                    messagebox.showinfo("Success", f"Reservation {new_reservation_id} successfully added.")
-                except Exception as e:
-                    messagebox.showerror("Error", f"An error occurred: {e}")
+                    # Create a new reservation ID
+                    cursor.execute("SELECT MAX(ReservationID) FROM Reservation")
+                    last_id = cursor.fetchone()[0]
+                    last_id_number = int(last_id[1:]) if last_id else 0
+                    new_reservation_id = f"R{last_id_number + 1}"
 
-            submit_button = tk.Button(take_reservation_window, text="Submit", command=submit_reservation_details, **buttonStyle)
+                    # Insert the new reservation
+                    insert_query = """
+                        INSERT INTO Reservation (ReservationID, CustomerName, CustomerPhoneNO, Date, Time, BranchID, TableID)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    """
+                    cursor.execute(insert_query, (new_reservation_id, customer_name, customer_phone, date, time, branch_id, selected_table))
+
+                    # Update table availability
+                    update_table_availability(selected_table, 0)
+
+                    # Commit the transaction
+                    db.commit()
+                    messagebox.showinfo("Success", f"Reservation {new_reservation_id} successfully added and table {selected_table} is now reserved.")
+                    take_reservation_window.destroy()
+                except Exception as e:
+                    db.rollback()
+                    messagebox.showerror("Error", f"An error occurred: {e}")
+                finally:
+                    cursor.close()
+
+            # Button to submit the reservation details
+            submit_button = tk.Button(take_reservation_window, text="Submit Reservation", command=submit_reservation_details, **buttonStyle)
             submit_button.pack()
+
+            # Button to go back to the previous window
             back_button = tk.Button(take_reservation_window, text="Back", command=take_reservation_window.destroy, **buttonStyle)
             back_button.pack(pady=10)
 
@@ -522,7 +558,7 @@ def waiting_staff_options(selected_branch_info, previous_window):
 
             #fetch reservation details from the database
             reservation_query = """
-                SELECT ReservationID, CustomerName, CustomerPhoneNO, Date, Time
+                SELECT ReservationID, CustomerName, CustomerPhoneNO, Date, Time, TableID
                 FROM Reservation
                 WHERE BranchID = %s
             """
@@ -532,8 +568,8 @@ def waiting_staff_options(selected_branch_info, previous_window):
 
             # show all the reservations in the window
             if reservation_results:
-                for reservation_id, customer_name, customer_phone, date, time in reservation_results:
-                    reservation_info = f"{reservation_id}: {customer_name} - {customer_phone} - {date} - {time}"
+                for reservation_id, customer_name, customer_phone, date, time, table_id in reservation_results:
+                    reservation_info = f"{reservation_id}: {customer_name} - {customer_phone} - {date} - {time} - ({table_id})"
                     tk.Label(view_reservation_window, text=reservation_info, font=fontStyle).pack()
             else:
                 tk.Label(view_reservation_window, text="No reservation found for this branch.", font=fontStyle).pack()
@@ -541,65 +577,88 @@ def waiting_staff_options(selected_branch_info, previous_window):
             back_button = tk.Button(view_reservation_window, text="Back", command=view_reservation_window.destroy, **buttonStyle)
             back_button.pack(pady=10)
 
-        def cancel_reservation():
+        def cancel_reservation(selected_branch_info):
             # Create a new window for canceling reservation
             cancel_reservation_window = tk.Toplevel(window)
             cancel_reservation_window.title("Cancel Reservation")
             cancel_reservation_window.state('zoomed')
-            # cancel_reservation_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
 
-            #get branch id from selected branch info
+            # Retrieve the BranchID from the selected branch info
             city, postcode = selected_branch_info.split(", ")
-            cursor = db.cursor(buffered=True)
-            branch_query = "SELECT BranchID FROM Branch WHERE City = %s AND PostCode = %s"
-            cursor.execute(branch_query, (city, postcode))
-            branch_result = cursor.fetchone()
-            branch_id = branch_result[0]
+            cursor = db.cursor()
+            cursor.execute("SELECT BranchID FROM Branch WHERE City = %s AND PostCode = %s", (city, postcode))
+            branch_id = cursor.fetchone()[0]
+            cursor.close()
 
-            #fetch reservation details from the database
+            # Fetch reservation details from the database for the branch
+            cursor = db.cursor()
             reservation_query = """
-                SELECT ReservationID, CustomerName, CustomerPhoneNO, Date, Time
+                SELECT ReservationID, CustomerName, CustomerPhoneNO, Date, Time, TableID
                 FROM Reservation
                 WHERE BranchID = %s
             """
-            cursor = db.cursor()
             cursor.execute(reservation_query, (branch_id,))
             reservation_results = cursor.fetchall()
+            cursor.close()
 
             # Create a list of reservations for the dropdown
-            reservation_list = [f"{row[0]}: {row[1]} - {row[2]} - {row[3]} - {row[4]}" for row in reservation_results] if reservation_results else []
+            reservation_list = [
+                f"{row[0]}: {row[1]} - {row[2]} - {row[3]} - {row[4]}"
+                for row in reservation_results
+            ] if reservation_results else []
 
-            if reservation_list:
-                reservation_var = tk.StringVar(cancel_reservation_window)
-                reservation_var.set(reservation_list[0])
-                reservation_dropdown = tk.OptionMenu(cancel_reservation_window, reservation_var, *reservation_list)
-                reservation_dropdown.pack()
+            reservation_var = tk.StringVar(cancel_reservation_window)
+            reservation_var.set(reservation_list[0] if reservation_list else "No reservations available")
+            reservation_dropdown = tk.OptionMenu(cancel_reservation_window, reservation_var, *reservation_list)
+            reservation_dropdown.pack()
 
-                def cancel_selected_reservation():
-                    selected = reservation_var.get().split(":")[0]
-                    delete_query = "DELETE FROM Reservation WHERE ReservationID = %s"
-                    try:
-                        cursor.execute(delete_query, (selected,))
+            def cancel_selected_reservation():
+                selected_reservation_id = reservation_var.get().split(":")[0]
+                cursor = db.cursor()
+                try:
+                    # Start transaction
+                    cursor.execute("START TRANSACTION")
+                    
+                    # Get the TableID of the reservation to be canceled
+                    get_table_query = "SELECT TableID FROM Reservation WHERE ReservationID = %s"
+                    cursor.execute(get_table_query, (selected_reservation_id,))
+                    table_id = cursor.fetchone()
+                    
+                    if table_id:
+                        table_id = table_id[0]  # Extract the TableID
+                        
+                        # Delete the reservation
+                        delete_query = "DELETE FROM Reservation WHERE ReservationID = %s"
+                        cursor.execute(delete_query, (selected_reservation_id,))
+                        
+                        # Update the availability of the table
+                        update_table_query = "UPDATE Tables SET Availability = 1 WHERE TableID = %s"
+                        cursor.execute(update_table_query, (table_id,))
+                        
+                        # Commit the changes
                         db.commit()
-                        messagebox.showinfo("Success", f"Reservation {selected} has been canceled.")
-                        cancel_reservation_window.destroy()
-                    except Exception as e:
-                        messagebox.showerror("Error", f"An error occurred: {e}")
+                        messagebox.showinfo("Success", f"Reservation {selected_reservation_id} has been canceled and table {table_id} is now available.")
+                    else:
+                        db.rollback()  # Rollback if no TableID is found for the reservation
+                        messagebox.showinfo("Notice", f"Reservation {selected_reservation_id} was not found or has no associated table.")
+                    
+                    cancel_reservation_window.destroy()
+                except Exception as e:
+                    db.rollback()
+                    messagebox.showerror("Error", f"An error occurred: {e}")
+                finally:
+                    cursor.close()
 
-                cancel_button = tk.Button(cancel_reservation_window, text="Cancel Reservation", command=cancel_selected_reservation, **buttonStyle)
-                cancel_button.pack()
-                back_button = tk.Button(cancel_reservation_window, text="Back", command=cancel_reservation_window.destroy, **buttonStyle)
-                back_button.pack(pady=10)
-            else:
-                tk.Label(cancel_reservation_window, text="No reservation found to cancel.", font=fontStyle).pack()
-                back_button = tk.Button(cancel_reservation_window, text="Back", command=cancel_reservation_window.destroy, **buttonStyle)
-                back_button.pack(pady=10)
+            cancel_button = tk.Button(cancel_reservation_window, text="Cancel Reservation", command=cancel_selected_reservation, **buttonStyle)
+            cancel_button.pack()
 
+            back_button = tk.Button(cancel_reservation_window, text="Back", command=cancel_reservation_window.destroy, **buttonStyle)
+            back_button.pack(pady=10)
 
         # 3 buttons for taking reservation, viewing reservations, and cancel reservation
-        take_reservation_button = tk.Button(reservation_window, text="Take Reservation", command=lambda: [reservation_window.destroy(), take_reservation()], font=('Helvetica', 12, 'bold'), height=2, width=15)
+        take_reservation_button = tk.Button(reservation_window, text="Take Reservation", command=lambda: [reservation_window.destroy(), take_reservation(selected_branch_info)], font=('Helvetica', 12, 'bold'), height=2, width=15)
         view_reservations_button = tk.Button(reservation_window, text="View Reservations", command=lambda: [reservation_window.destroy(), view_reservations()], font=('Helvetica', 12, 'bold'), height=2, width=15)
-        cancel_reservation_button = tk.Button(reservation_window, text="Cancel Reservation", command=lambda: [reservation_window.destroy(), cancel_reservation()], font=('Helvetica', 12, 'bold'), height=2, width=15)
+        cancel_reservation_button = tk.Button(reservation_window, text="Cancel Reservation", command=lambda: [reservation_window.destroy(), cancel_reservation(selected_branch_info)], font=('Helvetica', 12, 'bold'), height=2, width=15)
 
         # Pack buttons in the center frame
         take_reservation_button.pack(pady=10)
@@ -609,7 +668,7 @@ def waiting_staff_options(selected_branch_info, previous_window):
         #back button to go back to the previous window
         back_button = tk.Button(reservation_window, text="Back", command=lambda: [reservation_window.destroy(), waiting_staff_options(selected_branch_info, waiting_staff_window)], **buttonStyle)
         back_button.pack(pady=10)
-
+        
 
 
     # Create buttons
