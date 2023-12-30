@@ -402,8 +402,174 @@ def waiting_staff_options(selected_branch_info, previous_window):
         order_window.state('zoomed')
         # take_order_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
 
-        def take_order():
-            pass    # Implement the functionality for taking orders
+        def take_order(selected_branch_info):
+            # Create a new window for taking an order
+            take_order_window = tk.Toplevel(window)
+            take_order_window.title("Take Order")
+            take_order_window.state('zoomed')
+            # take_order_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+            # Extract the BranchID from the selected branch info
+            city, postcode = selected_branch_info.split(", ")
+            cursor = db.cursor()
+            cursor.execute("SELECT BranchID FROM Branch WHERE City = %s AND PostCode = %s", (city, postcode))
+            branch_id = cursor.fetchone()[0]
+
+            # Function to fetch available stock
+            def get_available_stock(branch_id):
+                cursor = db.cursor()
+                cursor.execute("SELECT StockID, StockType FROM Stock WHERE BranchID = %s AND AmountInStock > 0", (branch_id,))
+                available_stock = cursor.fetchall()
+                cursor.close()
+                return available_stock
+
+            # Function to fetch available tables
+            def get_available_tables(branch_id):
+                cursor = db.cursor()
+                cursor.execute("SELECT TableID FROM Tables WHERE BranchID = %s", (branch_id,))
+                available_tables = cursor.fetchall()
+                cursor.close()
+                return available_tables
+
+            # Fetch available stock and tables for the branch
+            available_stock = get_available_stock(branch_id)
+            available_tables = get_available_tables(branch_id)
+
+
+            # Dropdown for selecting stock
+            stock_var = tk.StringVar(take_order_window)
+            stock_var.set("Select stock")
+            stock_dropdown_label = tk.Label(take_order_window, text="Select Stock:", font=fontStyle)
+            stock_dropdown_label.pack()
+            stock_dropdown = tk.OptionMenu(take_order_window, stock_var, *[f"{stock[0]} - {stock[1]}" for stock in available_stock])
+            stock_dropdown.pack()
+
+            # Dropdown for selecting a table
+            table_var = tk.StringVar(take_order_window)
+            table_var.set("Select table")
+            table_dropdown_label = tk.Label(take_order_window, text="Select Table:", font=fontStyle)
+            table_dropdown_label.pack()
+            table_dropdown = tk.OptionMenu(take_order_window, table_var, *[table[0] for table in available_tables])
+            table_dropdown.pack()
+
+            # Function to create a new order entry
+            def submit_order_details():
+                selected_stock_id = stock_var.get().split(" - ")[0]
+                selected_table_id = table_var.get()
+
+                if selected_stock_id.startswith("Select") or selected_table_id.startswith("Select"):
+                    messagebox.showerror("Error", "You must select a valid stock and table.")
+                    return
+
+                cursor = db.cursor()
+                try:
+                    # Generate a new unique TrackID
+                    cursor.execute("SELECT TrackID FROM orderr ORDER BY CAST(SUBSTRING(TrackID, 2) AS UNSIGNED) DESC LIMIT 1;")
+                    last_track_id = cursor.fetchone()[0]
+                    last_track_id_number = int(last_track_id[1:]) if last_track_id else 0
+                    new_track_id = f"T{last_track_id_number + 1}"
+
+                    # Insert the new order
+                    insert_query = "INSERT INTO Orderr (TrackID, StockID, TableID) VALUES (%s, %s, %s)"
+                    cursor.execute(insert_query, (new_track_id, selected_stock_id, selected_table_id))
+
+                    # Update stock amount
+                    update_stock_query = "UPDATE Stock SET AmountInStock = AmountInStock - 1 WHERE StockID = %s"
+                    cursor.execute(update_stock_query, (selected_stock_id,))
+
+                    # Set the table as unavailable
+                    update_table_query = "UPDATE Tables SET Availability = 0 WHERE TableID = %s"
+                    cursor.execute(update_table_query, (selected_table_id,))
+
+                    # Commit the transaction
+                    db.commit()
+                    messagebox.showinfo("Success", f"Order with tracking ID {new_track_id} successfully taken for table {selected_table_id}.")
+                    
+                except Exception as e:
+                    db.rollback()
+                    messagebox.showerror("Error", f"An error occurred: {e}")
+                finally:
+                    cursor.close()
+                    
+            def remove_order():
+                remove_order_window = tk.Toplevel(window)
+                remove_order_window.title("Remove Order")
+                remove_order_window.state('zoomed')
+                # remove_order_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+                # Fetch all orders for the branch
+                cursor = db.cursor()
+                cursor.execute("SELECT TrackID, StockID, TableID FROM Orderr WHERE TableID IN (SELECT TableID FROM Tables WHERE BranchID = %s)", (branch_id,))
+                order_results = cursor.fetchall()
+                cursor.close()
+
+                # Create a list of orders for the dropdown
+                order_list = [f"{row[0]}: {row[1]} - {row[2]}"
+                    for row in order_results
+                ] if order_results else []
+
+                if order_list:
+                    order_var = tk.StringVar(remove_order_window)
+                    order_var.set(order_list[0])
+                    order_dropdown = tk.OptionMenu(remove_order_window, order_var, *order_list)
+                    order_dropdown.pack()
+                    
+                    def remove_selected_order():
+                        selected = order_var.get().split(":")[0]
+                        cursor = db.cursor()
+                        try:
+                            # Start transaction
+                            cursor.execute("START TRANSACTION")
+                            
+                            # Get the TableID of the order to be canceled
+                            get_table_query = "SELECT TableID FROM Orderr WHERE TrackID = %s"
+                            cursor.execute(get_table_query, (selected,))
+                            table_id = cursor.fetchone()
+                            
+                            if table_id:
+                                table_id = table_id[0]  # Extract the TableID
+                                
+                                # Delete the order
+                                delete_query = "DELETE FROM Orderr WHERE TrackID = %s"
+                                cursor.execute(delete_query, (selected,))
+
+                                # Commit the changes
+                                db.commit()
+                                messagebox.showinfo("Success", f"Order {selected} has been cancelled")
+                            else:
+                                db.rollback()  # Rollback if no TableID is found for the order
+                                messagebox.showinfo("Notice", f"Order {selected} was not found or has no associated table.")
+                            
+                            remove_order_window.destroy()
+                        except Exception as e:
+                            db.rollback()
+                            messagebox.showerror("Error", f"An error occurred: {e}")
+                        finally:
+                            cursor.close()
+
+                    remove_button = tk.Button(remove_order_window, text="Remove Order", command=remove_selected_order, **buttonStyle)
+                    remove_button.pack()
+                    back_button = tk.Button(remove_order_window, text="Back", command=remove_order_window.destroy, **buttonStyle)
+                    back_button.pack(pady=10)
+                else:
+                    tk.Label(remove_order_window, text="No orders found for this branch.", font=fontStyle).pack()
+                    back_button = tk.Button(remove_order_window, text="Back", command=remove_order_window.destroy, **buttonStyle)
+                    back_button.pack(pady=10)
+
+
+            # Button to submit the order details
+            submit_button = tk.Button(take_order_window, text="Submit Order", command=submit_order_details, **buttonStyle)
+            submit_button.pack()
+
+            # Button to go back to the previous window
+            back_button = tk.Button(take_order_window, text="Back", command=take_order_window.destroy, **buttonStyle)
+            back_button.pack(pady=10)
+
+            # Add a button for removing an order in the take_order_window
+            remove_order_button = tk.Button(take_order_window, text="Remove Order", command=remove_order, **buttonStyle)
+            remove_order_button.pack()
+
+            
 
         def view_orders():
             pass # Implement the functionality for viewing orders
@@ -412,7 +578,7 @@ def waiting_staff_options(selected_branch_info, previous_window):
             pass # Implement the functionality for printing receipts
 
         # 3 buttons for taking order, viewing orders, and print recipt
-        take_order_button = tk.Button(order_window, text="Take Order", command=lambda: [order_window.destroy(), take_order()], font=('Helvetica', 12, 'bold'), height=2, width=15)
+        take_order_button = tk.Button(order_window, text="Take Order", command=lambda: [order_window.destroy(), take_order(selected_branch_info)], font=('Helvetica', 12, 'bold'), height=2, width=15)
         view_orders_button = tk.Button(order_window, text="View Orders", command=lambda: [order_window.destroy(), view_orders()], font=('Helvetica', 12, 'bold'), height=2, width=15)
         print_receipt_button = tk.Button(order_window, text="Print Receipt", command=lambda: [order_window.destroy(), print_receipt()], font=('Helvetica', 12, 'bold'), height=2, width=15)
 
