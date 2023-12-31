@@ -491,54 +491,59 @@ def waiting_staff_options(selected_branch_info, previous_window):
                 finally:
                     cursor.close()
                     
-            def remove_order():
+            def remove_order(branch_id):
                 remove_order_window = tk.Toplevel(window)
                 remove_order_window.title("Remove Order")
                 remove_order_window.state('zoomed')
                 # remove_order_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
 
-                # Fetch all orders for the branch
+                # Fetch all orders with their corresponding StockType for the branch
                 cursor = db.cursor()
-                cursor.execute("SELECT TrackID, StockID, TableID FROM Orderr WHERE TableID IN (SELECT TableID FROM Tables WHERE BranchID = %s)", (branch_id,))
+                cursor.execute("""
+                    SELECT o.TrackID, s.StockType, o.TableID 
+                    FROM Orderr o 
+                    INNER JOIN Stock s ON o.StockID = s.StockID 
+                    WHERE o.TableID IN (
+                        SELECT TableID FROM Tables WHERE BranchID = %s AND Availability = 0
+                    )
+                """, (branch_id,))
                 order_results = cursor.fetchall()
                 cursor.close()
 
-                # Create a list of orders for the dropdown
-                order_list = [f"{row[0]}: {row[1]} - {row[2]}"
-                    for row in order_results
-                ] if order_results else []
+                # Create a list of orders for the dropdown, showing StockType instead of StockID
+                order_list = [f"{row[0]}: {row[1]} - Table ID: {row[2]}"
+                            for row in order_results] if order_results else []
 
                 if order_list:
                     order_var = tk.StringVar(remove_order_window)
-                    order_var.set(order_list[0])
+                    order_var.set(order_list[0])  # Set default value
                     order_dropdown = tk.OptionMenu(remove_order_window, order_var, *order_list)
                     order_dropdown.pack()
                     
                     def remove_selected_order():
-                        selected = order_var.get().split(":")[0]
+                        selected_track_id = order_var.get().split(":")[0]
                         cursor = db.cursor()
                         try:
                             # Start transaction
                             cursor.execute("START TRANSACTION")
                             
-                            # Get the TableID of the order to be canceled
-                            get_table_query = "SELECT TableID FROM Orderr WHERE TrackID = %s"
-                            cursor.execute(get_table_query, (selected,))
-                            table_id = cursor.fetchone()
-                            
-                            if table_id:
-                                table_id = table_id[0]  # Extract the TableID
-                                
-                                # Delete the order
-                                delete_query = "DELETE FROM Orderr WHERE TrackID = %s"
-                                cursor.execute(delete_query, (selected,))
+                            # Delete the order
+                            delete_query = "DELETE FROM Orderr WHERE TrackID = %s"
+                            cursor.execute(delete_query, (selected_track_id,))
 
-                                # Commit the changes
-                                db.commit()
-                                messagebox.showinfo("Success", f"Order {selected} has been cancelled")
-                            else:
-                                db.rollback()  # Rollback if no TableID is found for the order
-                                messagebox.showinfo("Notice", f"Order {selected} was not found or has no associated table.")
+                            # Update the availability of the table
+                            # Ensure to retrieve and update the correct TableID from the Order
+                            update_table_query = """
+                            UPDATE Tables SET Availability = 1 
+                            WHERE TableID = (
+                                SELECT TableID FROM Orderr WHERE TrackID = %s
+                            )
+                            """
+                            cursor.execute(update_table_query, (selected_track_id,))
+
+                            # Commit the changes
+                            db.commit()
+                            messagebox.showinfo("Success", f"Order {selected_track_id} has been cancelled")
                             
                             remove_order_window.destroy()
                         except Exception as e:
@@ -556,7 +561,6 @@ def waiting_staff_options(selected_branch_info, previous_window):
                     back_button = tk.Button(remove_order_window, text="Back", command=remove_order_window.destroy, **buttonStyle)
                     back_button.pack(pady=10)
 
-
             # Button to submit the order details
             submit_button = tk.Button(take_order_window, text="Submit Order", command=submit_order_details, **buttonStyle)
             submit_button.pack()
@@ -566,7 +570,7 @@ def waiting_staff_options(selected_branch_info, previous_window):
             back_button.pack(pady=10)
 
             # Add a button for removing an order in the take_order_window
-            remove_order_button = tk.Button(take_order_window, text="Remove Order", command=remove_order, **buttonStyle)
+            remove_order_button = tk.Button(take_order_window, text="Remove Order", command=lambda: remove_order(branch_id), **buttonStyle)
             remove_order_button.pack()
 
             
