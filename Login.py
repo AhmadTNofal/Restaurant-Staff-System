@@ -588,14 +588,13 @@ def waiting_staff_options(selected_branch_info, previous_window):
 
             # Fetch all orders with their corresponding StockType for the branch
             cursor = db.cursor()
-            cursor.execute("""
-                SELECT o.TrackID, s.StockType, o.TableID
-                FROM Orderr o
-                INNER JOIN Stock s ON o.StockID = s.StockID
-                WHERE o.TableID IN (
-                    SELECT TableID FROM Tables WHERE BranchID = %s AND Availability = 0
-                )
-            """, (branch_id,))
+            cursor.execute("""SELECT o.TrackID, s.StockType, o.TableID
+                                FROM Orderr o
+                                INNER JOIN Stock s ON o.StockID = s.StockID
+                                WHERE o.TableID IN (
+                                    SELECT TableID FROM Tables WHERE BranchID = %s AND Availability = 0
+                                )""", (branch_id,))
+            
             order_results = cursor.fetchall()
             cursor.close()
 
