@@ -573,17 +573,50 @@ def waiting_staff_options(selected_branch_info, previous_window):
             remove_order_button = tk.Button(take_order_window, text="Remove Order", command=lambda: remove_order(branch_id), **buttonStyle)
             remove_order_button.pack()
 
-            
+        def view_orders(selected_branch_info):
+            view_orders_window = tk.Toplevel(window)
+            view_orders_window.title("View Orders")
+            view_orders_window.state('zoomed')
+            # view_orders_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
 
-        def view_orders():
-            pass # Implement the functionality for viewing orders
+            # Extract the BranchID from the selected branch info
+            city, postcode = selected_branch_info.split(", ")
+            cursor = db.cursor()
+            cursor.execute("SELECT BranchID FROM Branch WHERE City = %s AND PostCode = %s", (city, postcode))
+            branch_id = cursor.fetchone()[0]
+            cursor.close()
+
+            # Fetch all orders with their corresponding StockType for the branch
+            cursor = db.cursor()
+            cursor.execute("""
+                SELECT o.TrackID, s.StockType, o.TableID
+                FROM Orderr o
+                INNER JOIN Stock s ON o.StockID = s.StockID
+                WHERE o.TableID IN (
+                    SELECT TableID FROM Tables WHERE BranchID = %s AND Availability = 0
+                )
+            """, (branch_id,))
+            order_results = cursor.fetchall()
+            cursor.close()
+
+            # print all the orders in the window
+
+            if order_results:
+                for track_id, stock_type, table_id in order_results:
+                    order_info = f"{track_id}: {stock_type} - Table ID: {table_id}"
+                    tk.Label(view_orders_window, text=order_info, font=fontStyle).pack()
+            else:
+                tk.Label(view_orders_window, text="No orders found for this branch.", font=fontStyle).pack()
+
+            back_button = tk.Button(view_orders_window, text="Back", command=view_orders_window.destroy, **buttonStyle)
+            back_button.pack(pady=10)
 
         def print_receipt():
             pass # Implement the functionality for printing receipts
 
         # 3 buttons for taking order, viewing orders, and print recipt
         take_order_button = tk.Button(order_window, text="Take Order", command=lambda: [order_window.destroy(), take_order(selected_branch_info)], font=('Helvetica', 12, 'bold'), height=2, width=15)
-        view_orders_button = tk.Button(order_window, text="View Orders", command=lambda: [order_window.destroy(), view_orders()], font=('Helvetica', 12, 'bold'), height=2, width=15)
+        view_orders_button = tk.Button(order_window, text="View Orders", command=lambda: [order_window.destroy(), view_orders(selected_branch_info)], font=('Helvetica', 12, 'bold'), height=2, width=15)
         print_receipt_button = tk.Button(order_window, text="Print Receipt", command=lambda: [order_window.destroy(), print_receipt()], font=('Helvetica', 12, 'bold'), height=2, width=15)
 
         # Pack buttons in the center frame
