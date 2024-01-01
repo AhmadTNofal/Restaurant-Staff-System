@@ -610,13 +610,115 @@ def waiting_staff_options(selected_branch_info, previous_window):
             back_button = tk.Button(view_orders_window, text="Back", command=view_orders_window.destroy, **buttonStyle)
             back_button.pack(pady=10)
 
-        def print_receipt():
-            pass # Implement the functionality for printing receipts
+        def print_receipt(selected_branch_info):
+            print_receipt_window = tk.Toplevel(window)
+            print_receipt_window.title("Print Receipt")
+            print_receipt_window.state('zoomed')
+            # print_receipt_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+            # Extract the BranchID from the selected branch info
+            city, postcode = selected_branch_info.split(", ")
+            cursor = db.cursor()
+            cursor.execute("SELECT BranchID FROM Branch WHERE City = %s AND PostCode = %s", (city, postcode))
+            branch_id = cursor.fetchone()[0]
+            cursor.close()
+
+            #dropdown for selecting the table
+            def get_available_tables(branch_id):
+                cursor = db.cursor()
+                cursor.execute("SELECT TableID FROM Tables WHERE BranchID = %s AND Availability = 0", (branch_id,))
+                return cursor.fetchall()
+            
+            available_tables = get_available_tables(branch_id)
+
+            #if there are no available tables, then the dropdown will show "No tables available"
+            if not available_tables:
+                available_tables = ["No tables available"]
+                table_var = tk.StringVar(print_receipt_window)
+                table_var.set(available_tables[0])
+                table_dropdown_label = tk.Label(print_receipt_window, text="Select Table:", font=fontStyle)
+                table_dropdown_label.pack()
+                table_dropdown = tk.OptionMenu(print_receipt_window, table_var, *[table for table in available_tables])
+                table_dropdown.pack()
+            else:
+                table_var = tk.StringVar(print_receipt_window)
+                table_var.set(available_tables[0][0] if available_tables else "No tables available")
+                table_dropdown_label = tk.Label(print_receipt_window, text="Select Table:", font=fontStyle)
+                table_dropdown_label.pack()
+                table_dropdown = tk.OptionMenu(print_receipt_window, table_var, *[table[0] for table in available_tables])
+                table_dropdown.pack()
+
+
+            #generate receipt
+            def generate_receipt():
+                selected_table = table_var.get()
+                if selected_table == "No tables available":
+                    messagebox.showerror("Error", "No available tables to print receipt for.")
+                    return
+
+                #fetch all the orders for the selected table
+                cursor = db.cursor()
+                cursor.execute("""
+                    SELECT o.TrackID, s.StockType, o.TableID, s.Price
+                    FROM Orderr o
+                    INNER JOIN Stock s ON o.StockID = s.StockID
+                    WHERE o.TableID = %s
+                """, (selected_table,))
+                order_results = cursor.fetchall()
+                cursor.close()
+
+                if order_results:
+                    #calculate total price
+                    total_price = sum([order[3] for order in order_results])
+                    receipt = f"Table ID: {selected_table}\n"
+                    receipt += f"{'-' * 20}\n"
+                    for track_id, stock_type, table_id, price in order_results:
+                        receipt += f"{track_id}: {stock_type} - £{price}\n"
+                    receipt += f"{'-' * 20}\n"
+                    receipt += f"Total: £{total_price}"
+                    tk.Label(print_receipt_window, text=receipt, font=fontStyle).pack()
+
+                    #update the table availability
+                    cursor = db.cursor()
+                    cursor.execute("UPDATE Tables SET Availability = 1 WHERE TableID = %s", (selected_table,))
+                    cursor.close()
+
+                    #delete the orders
+                    cursor = db.cursor()
+                    cursor.execute("DELETE FROM Orderr WHERE TableID = %s", (selected_table,))
+                    cursor.close()
+
+                    #update the receipt table
+                    cursor = db.cursor()
+                    cursor.execute("SELECT ReceiptID FROM receipt ORDER BY CAST(SUBSTRING(ReceiptID, 2) AS UNSIGNED) DESC Limit 1;")
+                    last_receipt_id = cursor.fetchone()[0]
+                    last_receipt_id_number = int(last_receipt_id[1:]) if last_receipt_id else 0
+                    new_receipt_id = f"R{last_receipt_id_number + 1}"
+                    cursor.execute("INSERT INTO Receipt (ReceiptID, TableID, Price, BranchID) VALUES (%s, %s, %s, %s)", (new_receipt_id, selected_table, total_price, branch_id))
+                    cursor.close()
+
+                    #commit the changes
+                    db.commit()
+
+                    #back button to go back to the previous window
+                    back_button = tk.Button(print_receipt_window, text="Back", command=print_receipt_window.destroy, **buttonStyle)
+                    back_button.pack(pady=10)
+
+                else:
+                    tk.Label(print_receipt_window, text="No orders found for this table.", font=fontStyle).pack()
+
+            #button to generate receipt
+            generate_receipt_button = tk.Button(print_receipt_window, text="Generate Receipt", command=generate_receipt, **buttonStyle)
+            generate_receipt_button.pack()
+
+            #back button to go back to the previous window
+            back_button = tk.Button(print_receipt_window, text="Back", command=print_receipt_window.destroy, **buttonStyle)
+            back_button.pack(pady=10)
 
         # 3 buttons for taking order, viewing orders, and print recipt
         take_order_button = tk.Button(order_window, text="Take Order", command=lambda: [order_window.destroy(), take_order(selected_branch_info)], font=('Helvetica', 12, 'bold'), height=2, width=15)
         view_orders_button = tk.Button(order_window, text="View Orders", command=lambda: [order_window.destroy(), view_orders(selected_branch_info)], font=('Helvetica', 12, 'bold'), height=2, width=15)
-        print_receipt_button = tk.Button(order_window, text="Print Receipt", command=lambda: [order_window.destroy(), print_receipt()], font=('Helvetica', 12, 'bold'), height=2, width=15)
+        print_receipt_button = tk.Button(order_window, text="Print Receipt", command=lambda: [order_window.destroy(), print_receipt(selected_branch_info)], font=('Helvetica', 12, 'bold'), height=2, width=15)
 
         # Pack buttons in the center frame
         take_order_button.pack(pady=10)
