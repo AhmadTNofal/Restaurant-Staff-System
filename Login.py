@@ -1,11 +1,18 @@
 import tkinter as tk
 import tkinter.font as tkFont
+import sqlite3
 from tkinter import ttk
 import mysql.connector
 from tkinter import messagebox
 from PIL import Image, ImageTk
 from PIL import Image, ImageEnhance
 
+tree=None
+tree = None
+stock_id_label = None
+stock_type_label = None
+amount_in_stock_label = None
+price_label = None
 # Initialize the main window
 window = tk.Tk()
 window.state('zoomed')
@@ -186,7 +193,42 @@ def manager_options(selected_branch_info, previous_window):
     # manager_options_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
 
     def show_reports():
-        pass  # Implement the functionality
+        previous_window.destroy()
+        show_reports_window = tk.Toplevel(window)
+        show_reports_window.title(f"Report - {selected_branch_info}")
+        show_reports_window.state('zoomed')
+
+        city, postcode = selected_branch_info.split(", ")
+
+        stock_query = """
+            SELECT StockID, StockType, AmountInStock, Price
+            FROM Stock
+            WHERE BranchID = (
+                SELECT BranchID
+                FROM Branch
+                WHERE City = %s AND PostCode = %s
+            )
+        """
+        cursor = db.cursor()
+        cursor.execute(stock_query, (city, postcode))
+        stock_results = cursor.fetchall()
+
+        if stock_results:
+            header_label = tk.Label(show_reports_window, text="Stock for this branch", font=('Helvetica', 14, 'bold'))
+            header_label.pack(pady=10)
+            for stock_id, stock_type, amount_in_stock, price in stock_results:
+                stock_info = f"{stock_id}: {stock_type} - {amount_in_stock} in stock - £{price}"
+                tk.Label(show_reports_window, text=stock_info, font=fontStyle).pack()
+        else:
+            header_label = tk.Label(show_reports_window, text="Empty Stock", font=('Helvetica', 14, 'bold'))
+            header_label.pack(pady=10)
+            
+
+
+        back_button = tk.Button(show_reports_window, text="Back", command=show_reports_window.destroy, **buttonStyle)
+        back_button.pack(pady=10)
+        
+
     
     def stock_options():
         # Close the previous window (manager options window)
