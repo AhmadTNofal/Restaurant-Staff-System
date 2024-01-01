@@ -2612,6 +2612,1481 @@ def Kitchen_Staff_Login(email_entry, password_entry):
     logout_button = tk.Button(center_frame, text="Logout", command=lambda: [kitchen_staff_window.destroy(), window.deiconify()], **buttonStyle)
     logout_button.grid(row=1, column=0, columnspan=2, padx=10, pady=10)
 
+def manager_Login(email_entry, password_entry):
+    # Close the previous window
+    window.withdraw()
+
+    #get branch id from staff email and password
+    cursor = db.cursor()
+    cursor.execute("SELECT BranchID FROM Account WHERE Email = %s AND Password = %s", (email_entry.get(), password_entry.get()))
+    branch_id = cursor.fetchone()[0]
+    cursor.close()
+
+    #get branch info from branch id
+    cursor = db.cursor()
+    cursor.execute("SELECT City, PostCode FROM Branch WHERE BranchID = %s", (branch_id,))
+    branch_info = cursor.fetchone()
+    selected_branch_info = f"{branch_info[0]} - {branch_info[1]}"
+    cursor.close()
+
+    staff_roles_window = tk.Toplevel(window)
+    staff_roles_window.title(f"Manager Options - {selected_branch_info}")
+    staff_roles_window.state('zoomed')
+    # manager_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+    heading_roles_frame = tk.Frame(staff_roles_window)
+    heading_roles_frame.pack(side=tk.TOP, pady=10)
+
+    heading_roles_label = tk.Label(heading_roles_frame, text="Staff Roles", font=('Helvetica', 16, 'bold'))
+    heading_roles_label.pack(side=tk.LEFT, padx=10)
+
+    buttons_frame = tk.Frame(staff_roles_window)
+    buttons_frame.pack(side=tk.TOP, pady=10)
+
+    logout_button = tk.Button(staff_roles_window, text="Logout", command=lambda: [staff_roles_window.destroy(), window.deiconify()], **buttonStyle)
+    logout_button.pack(side=tk.BOTTOM, pady=10)
+
+    center_frame = tk.Frame(staff_roles_window)
+    center_frame.pack(expand=True)
+
+    def show_all_staff():
+        # Create a new window for showing all staff in the branch
+        show_all_staff_window = tk.Toplevel(window)
+        show_all_staff_window.title("Show All Staff")
+
+        # Fetch all staff for the branch
+        cursor = db.cursor()
+        cursor.execute("SELECT AccountID, ForeName, SurName, Email, Role FROM Account WHERE BranchID = %s", (branch_id,))
+        staff_results = cursor.fetchall()
+
+        # Print all the staff in the window
+        if staff_results:
+            for account_id, forename, surname, email, role in staff_results:
+                staff_info = f"{account_id}: {forename} {surname} - {email} - {role}"
+                tk.Label(show_all_staff_window, text=staff_info, font=fontStyle).pack()
+
+        else:
+            tk.Label(show_all_staff_window, text="No staff found for this branch.", font=fontStyle).pack()
+
+        back_button = tk.Button(show_all_staff_window, text="Back", command=show_all_staff_window.destroy, **buttonStyle)
+        back_button.pack(pady=10)
+
+    def add_staff():
+        add_staff_window = tk.Toplevel(window)
+        add_staff_window.title("Add Staff")
+        add_staff_window.state('zoomed')
+        # add_staff_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+        # Entry fields for staff details
+        forename_label = tk.Label(add_staff_window, text="Forename:", font=fontStyle)
+        forename_label.pack()
+        forename_entry = tk.Entry(add_staff_window, font=fontStyle)
+        forename_entry.pack()
+
+        surname_label = tk.Label(add_staff_window, text="Surname:", font=fontStyle)
+        surname_label.pack()
+        surname_entry = tk.Entry(add_staff_window, font=fontStyle)
+        surname_entry.pack()
+
+        email_label = tk.Label(add_staff_window, text="Email:", font=fontStyle)
+        email_label.pack()
+        email_entry = tk.Entry(add_staff_window, font=fontStyle)
+        email_entry.pack()
+
+        # Password entry with hidden input
+        password_label = tk.Label(add_staff_window, text="Password:", font=fontStyle)
+        password_label.pack()
+        password_entry = tk.Entry(add_staff_window, font=fontStyle, show="*")
+        password_entry.pack()
+
+        # Dropdown for role selection
+        role_label = tk.Label(add_staff_window, text="Role:", font=fontStyle)
+        role_label.pack()
+        role_var = tk.StringVar(add_staff_window)
+        role_options = ['Waiting Staff', 'Kitchen Staff']
+        role_var.set(role_options[0])  # set default value
+        role_dropdown = tk.OptionMenu(add_staff_window, role_var, *role_options)
+        role_dropdown.pack()
+
+        # Submit function
+        def submit_staff_details():
+            forename = forename_entry.get()
+            surname = surname_entry.get()
+            email = email_entry.get()
+            password = password_entry.get()
+            role = role_var.get()
+            
+
+            # Generate Account ID based on role
+            account_id_prefix = {'Manager': 'M', 'Waiting Staff': 'W', 'Kitchen Staff': 'K'}
+            prefix = account_id_prefix[role]
+
+            # Find the last account ID for the selected role and increment it
+            find_last_id_query = f"SELECT MAX(AccountID) FROM Account WHERE AccountID LIKE '{prefix}%'"
+            cursor = db.cursor()
+            cursor.execute(find_last_id_query)
+            last_id_row = cursor.fetchone()
+            last_id = last_id_row[0] if last_id_row and last_id_row[0] else prefix + "0"
+            new_id_number = int(last_id.lstrip(prefix)) + 1
+            new_account_id = prefix + str(new_id_number)
+
+            # Insert into database (adjust according to your schema)
+            insert_query = """
+                INSERT INTO Account (AccountID, ForeName, SurName, Email, Password, Role, BranchID)
+                SELECT %s, %s, %s, %s, %s, %s, Branch.BranchID
+                FROM Branch
+                WHERE BranchID = (%s)
+            """
+            try:
+                cursor.execute(insert_query, (new_account_id, forename, surname, email, password, role, branch_id))
+                db.commit()
+                messagebox.showinfo("Success", f"Account for {forename} {surname} (ID: {new_account_id}) has been successfully created.")
+            except Exception as e:
+                messagebox.showerror("Error", f"An error occurred: {e}")
+            finally:
+                add_staff_window.destroy()
+
+        submit_button = tk.Button(add_staff_window, text="Submit", command=submit_staff_details, **buttonStyle)
+        submit_button.pack()
+        back_button = tk.Button(add_staff_window, text="Back", command=add_staff_window.destroy, **buttonStyle)
+        back_button.pack(pady=10)
+
+    def remove_staff():
+      # Create a new window for removing staff
+        remove_staff_window = tk.Toplevel(window)
+        remove_staff_window.title("Remove Staff")
+        remove_staff_window.state('zoomed')
+        # remove_staff_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+        # Fetch staff details from the database
+        staff_query = """
+            SELECT AccountID, ForeName, SurName, Email, Role
+            FROM Account
+            WHERE BranchID = (
+                SELECT BranchID
+                FROM Branch
+                WHERE BranchID = %s AND Role != 'Manager'
+            )
+        """
+        cursor = db.cursor()
+        cursor.execute(staff_query, (branch_id,))
+        staff_results = cursor.fetchall()
+
+        # Create a list of staff for the dropdown
+        staff_list = [f"{row[0]}: {row[1]} {row[2]} - {row[3]} - {row[4]}" for row in staff_results] if staff_results else []
+
+        if staff_list:
+            staff_var = tk.StringVar(remove_staff_window)
+            staff_var.set(staff_list[0])
+            staff_dropdown = tk.OptionMenu(remove_staff_window, staff_var, *staff_list)
+            staff_dropdown.pack()
+    
+            def remove_selected_staff():
+                selected = staff_var.get().split(":")[0]
+                delete_query = "DELETE FROM Account WHERE AccountID = %s"
+                try:
+                    cursor.execute(delete_query, (selected,))
+                    db.commit()
+                    messagebox.showinfo("Success", f"Staff {selected} has been removed.")
+                    remove_staff_window.destroy()
+                except Exception as e:
+                    messagebox.showerror("Error", f"An error occurred: {e}")
+            
+            remove_button = tk.Button(remove_staff_window, text="Remove Staff", command=remove_selected_staff, **buttonStyle)
+            remove_button.pack()
+            back_button = tk.Button(remove_staff_window, text="Back", command=remove_staff_window.destroy, **buttonStyle)
+            back_button.pack(pady=10)
+        else:
+            tk.Label(remove_staff_window, text="No staff found to remove.", font=fontStyle).pack()
+            back_button = tk.Button(remove_staff_window, text="Back", command=remove_staff_window.destroy, **buttonStyle)
+            back_button.pack(pady=10)
+
+    def button_click(role):
+        if role == "Manager":
+            # Close the previous window
+            window.withdraw()
+
+            #get branch id from staff email and password
+            cursor = db.cursor()
+            cursor.execute("SELECT BranchID FROM Account WHERE Email = %s AND Password = %s", (email_entry.get(), password_entry.get()))
+            branch_id = cursor.fetchone()[0]
+            cursor.close()
+
+            #get branch info from branch id
+            cursor = db.cursor()
+            cursor.execute("SELECT City, PostCode FROM Branch WHERE BranchID = %s", (branch_id,))
+            branch_info = cursor.fetchone()
+            selected_branch_info = branch_info[0] + " - " + branch_info[1]
+            cursor.close()
+            # Close the previous window (staff roles window)
+            manager_options_window = tk.Toplevel(window)
+            manager_options_window.title(f"Manager Options - {selected_branch_info}")
+            manager_options_window.state('zoomed')
+            # manager_options_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+            def show_reports():
+                pass  # Implement the functionality
+            
+            def stock_options():
+                
+                stock_options_window = tk.Toplevel(window)
+                stock_options_window.title(f"Stock Options - {selected_branch_info}")
+                stock_options_window.state('zoomed')
+
+                stock_center_frame = tk.Frame(stock_options_window)
+                stock_center_frame.pack(expand=True)
+                # stock_options_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+                # Define functionalities for each button 
+                view_stock_button = tk.Button(stock_center_frame, text="View Stock", command=lambda: view_stock(selected_branch_info), font=('Helvetica', 12, 'bold'), height=2, width=15)
+                add_stock_button = tk.Button(stock_center_frame, text="Add Stock", command=lambda: add_stock(selected_branch_info), font=('Helvetica', 12, 'bold'), height=2, width=15)
+                remove_stock_button = tk.Button(stock_center_frame, text="Remove Stock", command=lambda: remove_stock(selected_branch_info), font=('Helvetica', 12, 'bold'), height=2, width=15)
+                
+                # Pack buttons in the center frame
+                view_stock_button.grid(row=0, column=0, padx=10, pady=10)
+                add_stock_button.grid(row=0, column=1, padx=10, pady=10)
+                remove_stock_button.grid(row=0, column=2, padx=10, pady=10)
+
+                # Back button to go back to the previous window
+                back_button = tk.Button(stock_options_window, text="Back", command=stock_options_window.destroy, **buttonStyle)
+                back_button.pack(pady=10)
+
+            def view_stock(selected_branch_info):
+                view_stock_window = tk.Toplevel(window)
+                view_stock_window.title("View Stock")
+                view_stock_window.state('zoomed')
+                # view_stock_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+                # Fetch all stock for the branch
+                cursor = db.cursor()
+                cursor.execute("SELECT StockID, StockType, AmountInStock, Price FROM Stock WHERE BranchID = %s", (branch_id,))
+                stock_results = cursor.fetchall()
+
+                # Print all the stock in the window
+                if stock_results:
+                    for stock_id, stock_type, amount_in_stock, price in stock_results:
+                        stock_info = f"{stock_id}: {stock_type} - Amount: {amount_in_stock} - Price: £{price}"
+                        tk.Label(view_stock_window, text=stock_info, font=fontStyle).pack()
+
+                else:
+                    tk.Label(view_stock_window, text="No stock found for this branch.", font=fontStyle).pack()
+
+                back_button = tk.Button(view_stock_window, text="Back", command=view_stock_window.destroy, **buttonStyle)
+                back_button.pack(pady=10)
+
+            def add_stock(selected_branch_info):
+                add_stock_window = tk.Toplevel(window)
+                add_stock_window.title("Add Stock")
+                add_stock_window.state('zoomed')
+                # add_stock_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+                # Entry fields for stock details
+                stock_type_label = tk.Label(add_stock_window, text="Stock Type:", font=fontStyle)
+                stock_type_label.pack()
+                stock_type_entry = tk.Entry(add_stock_window, font=fontStyle)
+                stock_type_entry.pack()
+
+                amount_in_stock_label = tk.Label(add_stock_window, text="Amount in Stock:", font=fontStyle)
+                amount_in_stock_label.pack()
+                amount_in_stock_entry = tk.Entry(add_stock_window, font=fontStyle)
+                amount_in_stock_entry.pack()
+
+                price_label = tk.Label(add_stock_window, text="Price:", font=fontStyle)
+                price_label.pack()
+                price_entry = tk.Entry(add_stock_window, font=fontStyle)
+                price_entry.pack()
+
+                # Submit function
+                def submit_stock_details():
+                    stock_type = stock_type_entry.get()
+                    amount_in_stock = amount_in_stock_entry.get()
+                    price = price_entry.get()
+
+                    # Generate Stock ID based on the last StockID
+                    cursor = db.cursor()
+                    cursor.execute("SELECT MAX(StockID) FROM Stock")
+                    last_stock_id_row = cursor.fetchone()
+                    last_stock_id = last_stock_id_row[0] if last_stock_id_row and last_stock_id_row[0] else "S0"
+                    new_stock_id_number = int(last_stock_id.lstrip("S")) + 1
+                    new_stock_id = "S" + str(new_stock_id_number)
+
+                    # Insert into database (adjust according to your schema)
+                    insert_query = """
+                        INSERT INTO Stock (StockID, StockType, AmountInStock, Price, BranchID)
+                        SELECT %s, %s, %s, %s, Branch.BranchID
+                        FROM Branch
+                        WHERE BranchID = (%s)
+                    """
+                    try:
+                        cursor.execute(insert_query, (new_stock_id, stock_type, amount_in_stock, price, branch_id))
+                        db.commit()
+                        messagebox.showinfo("Success", f"Stock {new_stock_id} successfully added.")
+                    except Exception as e:
+                        messagebox.showerror("Error", f"An error occurred: {e}")
+                    finally:
+                        add_stock_window.destroy()
+                        stock_options(selected_branch_info)
+
+                submit_button = tk.Button(add_stock_window, text="Submit", command=submit_stock_details, **buttonStyle)
+                submit_button.pack()
+
+                back_button = tk.Button(add_stock_window, text="Back", command=add_stock_window.destroy, **buttonStyle)
+                back_button.pack(pady=10)
+
+                #separator
+                ttk.Separator(add_stock_window, orient='horizontal').pack(fill='x', pady=10)
+
+                #dropdown list of all available stock
+                def get_available_stock(branch_id):
+                    cursor = db.cursor()
+                    cursor.execute("SELECT StockID, StockType FROM Stock WHERE BranchID = %s", (branch_id,))
+                    return cursor.fetchall()
+                
+                available_stock = get_available_stock(branch_id)
+
+                stock_var = tk.StringVar(add_stock_window)
+                stock_var.set("Select stock")
+                stock_dropdown_label = tk.Label(add_stock_window, text="Select Stock:", font=fontStyle)
+                stock_dropdown_label.pack()
+                stock_dropdown = tk.OptionMenu(add_stock_window, stock_var, *[f"{stock[0]} - {stock[1]}" for stock in available_stock])
+                stock_dropdown.pack()
+
+                # add ammoount to stock text box
+                amount_to_add_label = tk.Label(add_stock_window, text="Amount to Add:", font=fontStyle)
+                amount_to_add_label.pack()
+                amount_to_add_entry = tk.Entry(add_stock_window, font=fontStyle)
+                amount_to_add_entry.pack()
+
+                #function to add stock
+                def add_stock():
+                    selected_stock_id = stock_var.get().split(" - ")[0]
+                    amount_to_add = amount_to_add_entry.get()
+
+                    if selected_stock_id.startswith("Select"):
+                        messagebox.showerror("Error", "You must select a valid stock.")
+                        return
+
+                    cursor = db.cursor()
+                    try:
+                        #update the stock amount
+                        update_stock_query = "UPDATE Stock SET AmountInStock = AmountInStock + %s WHERE StockID = %s"
+                        cursor.execute(update_stock_query, (amount_to_add, selected_stock_id))
+                        db.commit()
+                        messagebox.showinfo("Success", f"{amount_to_add} of stock {selected_stock_id} successfully added.")
+                    except Exception as e:
+                        messagebox.showerror("Error", f"An error occurred: {e}")
+                    finally:
+                        add_stock_window.destroy()
+                        stock_options(selected_branch_info)
+
+                add_button = tk.Button(add_stock_window, text="Add Stock", command=add_stock, **buttonStyle)
+                add_button.pack()
+
+                #back button to go back to the previous window
+                back_button = tk.Button(add_stock_window, text="Back", command=add_stock_window.destroy, **buttonStyle)
+                back_button.pack(pady=10)
+
+            def remove_stock(selected_branch_info):
+                #get branch id from staff email and password
+                cursor = db.cursor()
+                cursor.execute("SELECT BranchID FROM Account WHERE Email = %s AND Password = %s", (email_entry.get(), password_entry.get()))
+                branch_id = cursor.fetchone()[0]
+                cursor.close()
+
+                #get branch info from branch id
+                cursor = db.cursor()
+                cursor.execute("SELECT City, PostCode FROM Branch WHERE BranchID = %s", (branch_id,))
+                selected_branch_info = cursor.fetchone()
+                cursor.close()
+
+                remove_stock_window = tk.Toplevel(window)
+                remove_stock_window.title("Remove Stock")
+                remove_stock_window.state('zoomed')
+                # remove_stock_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+                # Fetch stock details from the database
+                stock_query = """
+                    SELECT StockID, StockType
+                    FROM Stock
+                    WHERE BranchID = (select BranchID from Branch where City = %s and PostCode = %s)
+                """
+                cursor = db.cursor()
+                cursor.execute(stock_query, (selected_branch_info[0], selected_branch_info[1]))
+                stock_results = cursor.fetchall()
+
+                # Create a list of stock for the dropdown
+                stock_list = [f"{row[0]}: {row[1]}" for row in stock_results] if stock_results else []
+
+                if stock_list:
+                    stock_var = tk.StringVar(remove_stock_window)
+                    stock_var.set(stock_list[0])
+                    stock_dropdown = tk.OptionMenu(remove_stock_window, stock_var, *stock_list)
+                    stock_dropdown.pack()
+            
+                    def remove_selected_stock():
+                        selected = stock_var.get().split(":")[0]
+                        delete_query = "DELETE FROM Stock WHERE StockID = %s"
+                        try:
+                            cursor.execute(delete_query, (selected,))
+                            db.commit()
+                            messagebox.showinfo("Success", f"Stock {selected} has been removed.")
+                            remove_stock_window.destroy()
+                        except Exception as e:
+                            messagebox.showerror("Error", f"An error occurred: {e}")
+                    
+                    remove_button = tk.Button(remove_stock_window, text="Remove Stock", command=remove_selected_stock, **buttonStyle)
+                    remove_button.pack()
+                    back_button = tk.Button(remove_stock_window, text="Back", command=remove_stock_window.destroy, **buttonStyle)
+                    back_button.pack(pady=10)
+
+                    #separator
+                    ttk.Separator(remove_stock_window, orient='horizontal').pack(fill='x', pady=10)
+
+                    #dropdown list of all available stock
+                    def get_available_stock(branch_id):
+                        cursor = db.cursor()
+                        cursor.execute("SELECT StockID, StockType FROM Stock WHERE BranchID = %s", (branch_id,))
+                        return cursor.fetchall()
+                    
+                    available_stock = get_available_stock(branch_id)
+
+                    stock_var = tk.StringVar(remove_stock_window)
+                    stock_var.set("Select stock")
+                    stock_dropdown_label = tk.Label(remove_stock_window, text="Select Stock:", font=fontStyle)
+                    stock_dropdown_label.pack()
+                    stock_dropdown = tk.OptionMenu(remove_stock_window, stock_var, *[f"{stock[0]} - {stock[1]}" for stock in available_stock])
+                    stock_dropdown.pack()
+
+                    # add ammoount to stock text box
+                    amount_to_remove_label = tk.Label(remove_stock_window, text="Amount to Remove:", font=fontStyle)
+                    amount_to_remove_label.pack()
+                    amount_to_remove_entry = tk.Entry(remove_stock_window, font=fontStyle)
+                    amount_to_remove_entry.pack()
+
+                    #function to add stock
+                    def remove_stock():
+                        selected_stock_id = stock_var.get().split(" - ")[0]
+                        amount_to_remove = amount_to_remove_entry.get()
+
+                        if selected_stock_id.startswith("Select"):
+                            messagebox.showerror("Error", "You must select a valid stock.")
+
+                        cursor = db.cursor()
+                        try:
+                            #update the stock amount
+                            update_stock_query = "UPDATE Stock SET AmountInStock = AmountInStock - %s WHERE StockID = %s"
+                            cursor.execute(update_stock_query, (amount_to_remove, selected_stock_id))
+                            db.commit()
+                            messagebox.showinfo("Success", f"{amount_to_remove} of stock {selected_stock_id} successfully removed.")
+                        except Exception as e:
+                            messagebox.showerror("Error", f"An error occurred: {e}")
+                        finally:
+                            remove_stock_window.destroy()
+                            stock_options(selected_branch_info)
+
+                    remove_button = tk.Button(remove_stock_window, text="Remove Stock", command=remove_stock, **buttonStyle)
+                    remove_button.pack()
+
+                    #back button to go back to the previous window
+                    back_button = tk.Button(remove_stock_window, text="Back", command=remove_stock_window.destroy, **buttonStyle)
+                    back_button.pack(pady=10)
+
+                else:
+                    tk.Label(remove_stock_window, text="No stock found to remove.", font=fontStyle).pack()
+                    back_button = tk.Button(remove_stock_window, text="Back", command=remove_stock_window.destroy, **buttonStyle)
+                    back_button.pack(pady=10)
+
+                    #separator
+                    ttk.Separator(remove_stock_window, orient='horizontal').pack(fill='x', pady=10)
+
+                    #dropdown list of all available stock
+                    def get_available_stock(branch_id):
+                        cursor = db.cursor()
+                        cursor.execute("SELECT StockID, StockType FROM Stock WHERE BranchID = %s", (branch_id,))
+                        return cursor.fetchall()
+                    
+                    available_stock = get_available_stock(branch_id)
+
+                    stock_var = tk.StringVar(remove_stock_window)
+                    stock_var.set("Select stock")
+                    stock_dropdown_label = tk.Label(remove_stock_window, text="Select Stock:", font=fontStyle)
+                    stock_dropdown_label.pack()
+                    stock_dropdown = tk.OptionMenu(remove_stock_window, stock_var, *[f"{stock[0]} - {stock[1]}" for stock in available_stock])
+                    stock_dropdown.pack()
+
+                    # add ammoount to stock text box
+                    amount_to_remove_label = tk.Label(remove_stock_window, text="Amount to Remove:", font=fontStyle)
+                    amount_to_remove_label.pack()
+                    amount_to_remove_entry = tk.Entry(remove_stock_window, font=fontStyle)
+                    amount_to_remove_entry.pack()
+
+                    #function to add stock
+                    def remove_stock():
+                        selected_stock_id = stock_var.get().split(" - ")[0]
+                        amount_to_remove = amount_to_remove_entry.get()
+
+                        if selected_stock_id.startswith("Select"):
+                            messagebox.showerror("Error", "You must select a valid stock.")
+
+                        cursor = db.cursor()
+                        try:
+                            #update the stock amount
+                            update_stock_query = "UPDATE Stock SET AmountInStock = AmountInStock - %s WHERE StockID = %s"
+                            cursor.execute(update_stock_query, (amount_to_remove, selected_stock_id))
+                            db.commit()
+                            messagebox.showinfo("Success", f"{amount_to_remove} of stock {selected_stock_id} successfully removed.")
+                        except Exception as e:
+                            messagebox.showerror("Error", f"An error occurred: {e}")
+                        finally:
+                            remove_stock_window.destroy()
+                            stock_options(selected_branch_info)
+
+                    remove_button = tk.Button(remove_stock_window, text="Remove Stock", command=remove_stock, **buttonStyle)
+                    remove_button.pack()
+
+                    #back button to go back to the previous window
+                    back_button = tk.Button(remove_stock_window, text="Back", command=remove_stock_window.destroy, **buttonStyle)
+                    back_button.pack(pady=10)
+
+            # Center frame for holding the buttons
+            center_frame = tk.Frame(manager_options_window)
+            center_frame.pack(expand=True)
+
+            # Create buttons with the same style as in open_staff_roles_window
+            
+            stock_options_button = tk.Button(center_frame, text="Stock", command=stock_options, font=('Helvetica', 12, 'bold'), height=2, width=15)
+            show_reports_button = tk.Button(center_frame, text="Show reports", command=show_reports, font=('Helvetica', 12, 'bold'), height=2, width=15)
+
+            # Pack buttons in the center frame
+
+            stock_options_button.grid(row=0, column=3, padx=10, pady=10)
+            show_reports_button.grid(row=0, column=4, padx=10, pady=10)
+
+            back_button = tk.Button(manager_options_window, text="Back", command=lambda: [manager_options_window.destroy()], **buttonStyle)
+            back_button.pack(side=tk.BOTTOM, pady=10)
+
+        elif role == "Waiting Staff":
+                # Close the previous window
+            window.withdraw()
+
+            #get branch id from staff email and password
+            cursor = db.cursor()
+            cursor.execute("SELECT BranchID FROM Account WHERE Email = %s AND Password = %s", (email_entry.get(), password_entry.get()))
+            branch_id = cursor.fetchone()[0]
+            cursor.close()
+
+            #get branch info from branch id
+            cursor = db.cursor()
+            cursor.execute("SELECT City, PostCode FROM Branch WHERE BranchID = %s", (branch_id,))
+            branch_info = cursor.fetchone()
+            selected_branch_info = branch_info[0] + " - " + branch_info[1]
+            cursor.close()
+
+            waiting_staff_window = tk.Toplevel(window)
+            waiting_staff_window.title(f"Waiting Staff Options - {selected_branch_info}")
+            waiting_staff_window.state('zoomed')
+            # waiting_staff_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+            # Center frame for holding the buttons
+            center_frame = tk.Frame(waiting_staff_window)
+            center_frame.pack(expand=True)
+
+            # Define functionalities for each button (placeholder functions)
+            def order():
+                order_window = tk.Toplevel(window)
+                order_window.title("Order")
+                order_window.state('zoomed')
+                # take_order_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+                def take_order(selected_branch_info):
+                    # Create a new window for taking an order
+                    take_order_window = tk.Toplevel(window)
+                    take_order_window.title("Take Order")
+                    take_order_window.state('zoomed')
+                    # take_order_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+                    # Function to fetch available stock
+                    def get_available_stock(branch_id):
+                        cursor = db.cursor()
+                        cursor.execute("SELECT StockID, StockType FROM Stock WHERE BranchID = %s AND AmountInStock > 0", (branch_id,))
+                        available_stock = cursor.fetchall()
+                        cursor.close()
+                        return available_stock
+
+                    # Function to fetch available tables
+                    def get_available_tables(branch_id):
+                        cursor = db.cursor()
+                        cursor.execute("SELECT TableID FROM Tables WHERE BranchID = %s", (branch_id,))
+                        available_tables = cursor.fetchall()
+                        cursor.close()
+                        return available_tables
+
+                    # Fetch available stock and tables for the branch
+                    available_stock = get_available_stock(branch_id)
+                    available_tables = get_available_tables(branch_id)
+
+
+                    # Dropdown for selecting stock
+                    stock_var = tk.StringVar(take_order_window)
+                    stock_var.set("Select stock")
+                    stock_dropdown_label = tk.Label(take_order_window, text="Select Stock:", font=fontStyle)
+                    stock_dropdown_label.pack()
+                    stock_dropdown = tk.OptionMenu(take_order_window, stock_var, *[f"{stock[0]} - {stock[1]}" for stock in available_stock])
+                    stock_dropdown.pack()
+
+                    # Dropdown for selecting a table
+                    table_var = tk.StringVar(take_order_window)
+                    table_var.set("Select table")
+                    table_dropdown_label = tk.Label(take_order_window, text="Select Table:", font=fontStyle)
+                    table_dropdown_label.pack()
+                    table_dropdown = tk.OptionMenu(take_order_window, table_var, *[table[0] for table in available_tables])
+                    table_dropdown.pack()
+
+                    # Function to create a new order entry
+                    def submit_order_details():
+                        selected_stock_id = stock_var.get().split(" - ")[0]
+                        selected_table_id = table_var.get()
+
+                        if selected_stock_id.startswith("Select") or selected_table_id.startswith("Select"):
+                            messagebox.showerror("Error", "You must select a valid stock and table.")
+                            return
+
+                        cursor = db.cursor()
+                        try:
+                            # Generate a new unique TrackID
+                            cursor.execute("SELECT TrackID FROM orderr ORDER BY CAST(SUBSTRING(TrackID, 2) AS UNSIGNED) DESC LIMIT 1;")
+                            last_track_id = cursor.fetchone()[0]
+                            last_track_id_number = int(last_track_id[1:]) if last_track_id else 0
+                            new_track_id = f"T{last_track_id_number + 1}"
+
+                            # Insert the new order
+                            insert_query = "INSERT INTO Orderr (TrackID, StockID, TableID) VALUES (%s, %s, %s)"
+                            cursor.execute(insert_query, (new_track_id, selected_stock_id, selected_table_id))
+
+                            # Update stock amount
+                            update_stock_query = "UPDATE Stock SET AmountInStock = AmountInStock - 1 WHERE StockID = %s"
+                            cursor.execute(update_stock_query, (selected_stock_id,))
+
+                            # Set the table as unavailable
+                            update_table_query = "UPDATE Tables SET Availability = 0 WHERE TableID = %s"
+                            cursor.execute(update_table_query, (selected_table_id,))
+
+                            # Commit the transaction
+                            db.commit()
+                            messagebox.showinfo("Success", f"Order with tracking ID {new_track_id} successfully taken for table {selected_table_id}.")
+                            
+                        except Exception as e:
+                            db.rollback()
+                            messagebox.showerror("Error", f"An error occurred: {e}")
+                        finally:
+                            cursor.close()
+                            
+                    def remove_order(branch_id):
+                        remove_order_window = tk.Toplevel(window)
+                        remove_order_window.title("Remove Order")
+                        remove_order_window.state('zoomed')
+                        # remove_order_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+                        # Fetch all orders with their corresponding StockType for the branch
+                        cursor = db.cursor()
+                        cursor.execute("""
+                            SELECT o.TrackID, s.StockType, o.TableID 
+                            FROM Orderr o 
+                            INNER JOIN Stock s ON o.StockID = s.StockID 
+                            WHERE o.TableID IN (
+                                SELECT TableID FROM Tables WHERE BranchID = %s AND Availability = 0
+                            )
+                        """, (branch_id,))
+                        order_results = cursor.fetchall()
+                        cursor.close()
+
+                        # Create a list of orders for the dropdown, showing StockType instead of StockID
+                        order_list = [f"{row[0]}: {row[1]} - Table ID: {row[2]}"
+                                    for row in order_results] if order_results else []
+
+                        if order_list:
+                            order_var = tk.StringVar(remove_order_window)
+                            order_var.set(order_list[0])  # Set default value
+                            order_dropdown = tk.OptionMenu(remove_order_window, order_var, *order_list)
+                            order_dropdown.pack()
+                            
+                            def remove_selected_order():
+                                selected_track_id = order_var.get().split(":")[0]
+                                cursor = db.cursor()
+                                try:
+                                    # Start transaction
+                                    cursor.execute("START TRANSACTION")
+                                    
+                                    # Delete the order
+                                    delete_query = "DELETE FROM Orderr WHERE TrackID = %s"
+                                    cursor.execute(delete_query, (selected_track_id,))
+
+                                    # Update the availability of the table
+                                    # Ensure to retrieve and update the correct TableID from the Order
+                                    update_table_query = """
+                                    UPDATE Tables SET Availability = 1 
+                                    WHERE TableID = (
+                                        SELECT TableID FROM Orderr WHERE TrackID = %s
+                                    )
+                                    """
+                                    cursor.execute(update_table_query, (selected_track_id,))
+
+                                    # Commit the changes
+                                    db.commit()
+                                    messagebox.showinfo("Success", f"Order {selected_track_id} has been cancelled")
+                                    
+                                    remove_order_window.destroy()
+                                except Exception as e:
+                                    db.rollback()
+                                    messagebox.showerror("Error", f"An error occurred: {e}")
+                                finally:
+                                    cursor.close()
+
+                            remove_button = tk.Button(remove_order_window, text="Remove Order", command=remove_selected_order, **buttonStyle)
+                            remove_button.pack()
+                            back_button = tk.Button(remove_order_window, text="Back", command=remove_order_window.destroy, **buttonStyle)
+                            back_button.pack(pady=10)
+                        else:
+                            tk.Label(remove_order_window, text="No orders found for this branch.", font=fontStyle).pack()
+                            back_button = tk.Button(remove_order_window, text="Back", command=remove_order_window.destroy, **buttonStyle)
+                            back_button.pack(pady=10)
+
+                    # Button to submit the order details
+                    submit_button = tk.Button(take_order_window, text="Submit Order", command=submit_order_details, **buttonStyle)
+                    submit_button.pack()
+
+                    # Button to go back to the previous window
+                    back_button = tk.Button(take_order_window, text="Back", command=take_order_window.destroy, **buttonStyle)
+                    back_button.pack(pady=10)
+
+                    # Add a button for removing an order in the take_order_window
+                    remove_order_button = tk.Button(take_order_window, text="Remove Order", command=lambda: remove_order(branch_id), **buttonStyle)
+                    remove_order_button.pack()
+
+                def view_orders(selected_branch_info):
+                    view_orders_window = tk.Toplevel(window)
+                    view_orders_window.title("View Orders")
+                    view_orders_window.state('zoomed')
+                    # view_orders_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+                    # Fetch all orders with their corresponding StockType for the branch
+                    cursor = db.cursor()
+                    cursor.execute("""SELECT o.TrackID, s.StockType, o.TableID
+                                        FROM Orderr o
+                                        INNER JOIN Stock s ON o.StockID = s.StockID
+                                        WHERE o.TableID IN (
+                                            SELECT TableID FROM Tables WHERE BranchID = %s AND Availability = 0
+                                        )""", (branch_id,))
+                    
+                    order_results = cursor.fetchall()
+                    cursor.close()
+
+                    # print all the orders in the window
+
+                    if order_results:
+                        for track_id, stock_type, table_id in order_results:
+                            order_info = f"{track_id}: {stock_type} - Table ID: {table_id}"
+                            tk.Label(view_orders_window, text=order_info, font=fontStyle).pack()
+                    else:
+                        tk.Label(view_orders_window, text="No orders found for this branch.", font=fontStyle).pack()
+
+                    back_button = tk.Button(view_orders_window, text="Back", command=view_orders_window.destroy, **buttonStyle)
+                    back_button.pack(pady=10)
+
+                def print_receipt(selected_branch_info):
+                    print_receipt_window = tk.Toplevel(window)
+                    print_receipt_window.title("Print Receipt")
+                    print_receipt_window.state('zoomed')
+                    # print_receipt_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+                    #dropdown for selecting the table
+                    def get_available_tables(branch_id):
+                        cursor = db.cursor()
+                        cursor.execute("SELECT TableID FROM Tables WHERE BranchID = %s AND Availability = 0", (branch_id,))
+                        return cursor.fetchall()
+                    
+                    available_tables = get_available_tables(branch_id)
+
+                    #if there are no available tables, then the dropdown will show "No tables available"
+                    if not available_tables:
+                        available_tables = ["No tables available"]
+                        table_var = tk.StringVar(print_receipt_window)
+                        table_var.set(available_tables[0])
+                        table_dropdown_label = tk.Label(print_receipt_window, text="Select Table:", font=fontStyle)
+                        table_dropdown_label.pack()
+                        table_dropdown = tk.OptionMenu(print_receipt_window, table_var, *[table for table in available_tables])
+                        table_dropdown.pack()
+                    else:
+                        table_var = tk.StringVar(print_receipt_window)
+                        table_var.set(available_tables[0][0] if available_tables else "No tables available")
+                        table_dropdown_label = tk.Label(print_receipt_window, text="Select Table:", font=fontStyle)
+                        table_dropdown_label.pack()
+                        table_dropdown = tk.OptionMenu(print_receipt_window, table_var, *[table[0] for table in available_tables])
+                        table_dropdown.pack()
+
+
+                    #generate receipt
+                    def generate_receipt():
+                        selected_table = table_var.get()
+                        if selected_table == "No tables available":
+                            messagebox.showerror("Error", "No available tables to print receipt for.")
+                            return
+
+                        #fetch all the orders for the selected table
+                        cursor = db.cursor()
+                        cursor.execute("""
+                            SELECT o.TrackID, s.StockType, o.TableID, s.Price
+                            FROM Orderr o
+                            INNER JOIN Stock s ON o.StockID = s.StockID
+                            WHERE o.TableID = %s
+                        """, (selected_table,))
+                        order_results = cursor.fetchall()
+                        cursor.close()
+
+                        if order_results:
+                            #calculate total price
+                            total_price = sum([order[3] for order in order_results])
+                            receipt = f"Table ID: {selected_table}\n"
+                            receipt += f"{'-' * 20}\n"
+                            for track_id, stock_type, table_id, price in order_results:
+                                receipt += f"{track_id}: {stock_type} - £{price}\n"
+                            receipt += f"{'-' * 20}\n"
+                            receipt += f"Total: £{total_price}"
+                            tk.Label(print_receipt_window, text=receipt, font=fontStyle).pack()
+
+                            #update the table availability
+                            cursor = db.cursor()
+                            cursor.execute("UPDATE Tables SET Availability = 1 WHERE TableID = %s", (selected_table,))
+                            cursor.close()
+
+                            #delete the orders
+                            cursor = db.cursor()
+                            cursor.execute("DELETE FROM Orderr WHERE TableID = %s", (selected_table,))
+                            cursor.close()
+
+                            #update the receipt table
+                            cursor = db.cursor()
+                            cursor.execute("SELECT ReceiptID FROM receipt ORDER BY CAST(SUBSTRING(ReceiptID, 2) AS UNSIGNED) DESC Limit 1;")
+                            last_receipt_id = cursor.fetchone()[0]
+                            last_receipt_id_number = int(last_receipt_id[1:]) if last_receipt_id else 0
+                            new_receipt_id = f"R{last_receipt_id_number + 1}"
+                            cursor.execute("INSERT INTO Receipt (ReceiptID, TableID, Price, BranchID) VALUES (%s, %s, %s, %s)", (new_receipt_id, selected_table, total_price, branch_id))
+                            cursor.close()
+
+                            #commit the changes
+                            db.commit()
+
+                            #back button to go back to the previous window
+                            back_button = tk.Button(print_receipt_window, text="Back", command=print_receipt_window.destroy, **buttonStyle)
+                            back_button.pack(pady=10)
+
+                        else:
+                            tk.Label(print_receipt_window, text="No orders found for this table.", font=fontStyle).pack()
+
+                    #button to generate receipt
+                    generate_receipt_button = tk.Button(print_receipt_window, text="Generate Receipt", command=generate_receipt, **buttonStyle)
+                    generate_receipt_button.pack()
+
+                    #back button to go back to the previous window
+                    back_button = tk.Button(print_receipt_window, text="Back", command=print_receipt_window.destroy, **buttonStyle)
+                    back_button.pack(pady=10)
+
+                # 3 buttons for taking order, viewing orders, and print recipt
+                take_order_button = tk.Button(order_window, text="Take Order", command=lambda: [order_window.destroy(), take_order(selected_branch_info)], font=('Helvetica', 12, 'bold'), height=2, width=15)
+                view_orders_button = tk.Button(order_window, text="View Orders", command=lambda: [order_window.destroy(), view_orders(selected_branch_info)], font=('Helvetica', 12, 'bold'), height=2, width=15)
+                print_receipt_button = tk.Button(order_window, text="Print Receipt", command=lambda: [order_window.destroy(), print_receipt(selected_branch_info)], font=('Helvetica', 12, 'bold'), height=2, width=15)
+
+                # Pack buttons in the center frame
+                take_order_button.pack(pady=10)
+                view_orders_button.pack(pady=10)
+                print_receipt_button.pack(pady=10)
+
+                #back button to go back to the previous window
+                back_button = tk.Button(order_window, text="Back", command=lambda: [order_window.destroy()], **buttonStyle)
+                back_button.pack(pady=10)
+
+            def reservation():
+                reservation_window = tk.Toplevel(window)
+                reservation_window.title("Reservation")
+                reservation_window.state('zoomed')
+                # reservation_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+                def take_reservation(selected_branch_info):
+                    # Create a new window for taking reservation
+                    take_reservation_window = tk.Toplevel(window)
+                    take_reservation_window.title("Take Reservation")
+                    take_reservation_window.state('zoomed')
+                    # take_reservation_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+                    # Entry fields for reservation details
+                    customer_name_label = tk.Label(take_reservation_window, text="Customer Name:", font=fontStyle)
+                    customer_name_label.pack()
+                    customer_name_entry = tk.Entry(take_reservation_window, font=fontStyle)
+                    customer_name_entry.pack()
+
+                    #customer phone number entry
+                    customer_phone_label = tk.Label(take_reservation_window, text="Customer Phone Number:", font=fontStyle)
+                    customer_phone_label.pack()
+                    customer_phone_entry = tk.Entry(take_reservation_window, font=fontStyle)
+                    customer_phone_entry.pack()
+
+                    #date entry
+                    date_label = tk.Label(take_reservation_window, text="Date (YYYY-MM-DD):", font=fontStyle)
+                    date_label.pack()
+                    date_entry = tk.Entry(take_reservation_window, font=fontStyle)
+                    date_entry.pack()
+
+                    #time entry
+                    time_label = tk.Label(take_reservation_window, text="Time (HH:MM):", font=fontStyle)
+                    time_label.pack()
+                    time_entry = tk.Entry(take_reservation_window, font=fontStyle)
+                    time_entry.pack()
+
+                    # Function to fetch available tables
+                    def get_available_tables(branch_id):
+                        cursor = db.cursor()
+                        cursor.execute("SELECT TableID FROM Tables WHERE BranchID = %s AND Availability = 1", (branch_id,))
+                        return cursor.fetchall()
+
+                    # Function to update table availability
+                    def update_table_availability(table_id, availability):
+                        cursor = db.cursor()
+                        cursor.execute("UPDATE Tables SET Availability = %s WHERE TableID = %s", (availability, table_id))
+                        cursor.close()
+
+                    # Dropdown for selecting a table
+                    available_tables = get_available_tables(branch_id)
+                    table_var = tk.StringVar(take_reservation_window)
+                    table_var.set(available_tables[0][0] if available_tables else "No tables available")
+                    table_dropdown_label = tk.Label(take_reservation_window, text="Available Tables:", font=fontStyle)
+                    table_dropdown_label.pack()
+                    table_dropdown = tk.OptionMenu(take_reservation_window, table_var, *[table[0] for table in available_tables])
+                    table_dropdown.pack()
+
+                    # Function to create a new reservation
+                    def submit_reservation_details():
+                        customer_name = customer_name_entry.get()
+                        customer_phone = customer_phone_entry.get()
+                        date = date_entry.get()
+                        time = time_entry.get()
+                        selected_table = table_var.get()
+
+                        if selected_table == "No tables available":
+                            messagebox.showerror("Error", "No available tables to reserve.")
+                            return
+
+                        # Start transaction
+                        cursor = db.cursor()
+                        cursor.execute("START TRANSACTION")
+                        try:
+                            # Create a new reservation ID
+                            cursor.execute("SELECT MAX(ReservationID) FROM Reservation")
+                            last_id = cursor.fetchone()[0]
+                            last_id_number = int(last_id[1:]) if last_id else 0
+                            new_reservation_id = f"R{last_id_number + 1}"
+
+                            # Insert the new reservation
+                            insert_query = """
+                                INSERT INTO Reservation (ReservationID, CustomerName, CustomerPhoneNO, Date, Time, BranchID, TableID)
+                                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                            """
+                            cursor.execute(insert_query, (new_reservation_id, customer_name, customer_phone, date, time, branch_id, selected_table))
+
+                            # Update table availability
+                            update_table_availability(selected_table, 0)
+
+                            # Commit the transaction
+                            db.commit()
+                            messagebox.showinfo("Success", f"Reservation {new_reservation_id} successfully added and table {selected_table} is now reserved.")
+                            take_reservation_window.destroy()
+                        except Exception as e:
+                            db.rollback()
+                            messagebox.showerror("Error", f"An error occurred: {e}")
+                        finally:
+                            cursor.close()
+
+                    # Button to submit the reservation details
+                    submit_button = tk.Button(take_reservation_window, text="Submit Reservation", command=submit_reservation_details, **buttonStyle)
+                    submit_button.pack()
+
+                    # Button to go back to the previous window
+                    back_button = tk.Button(take_reservation_window, text="Back", command=take_reservation_window.destroy, **buttonStyle)
+                    back_button.pack(pady=10)
+
+                def view_reservations():
+                    # Create a new window for viewing reservation
+                    view_reservation_window = tk.Toplevel(window)
+                    view_reservation_window.title("View Reservation")
+                    view_reservation_window.state('zoomed')
+                    # view_reservation_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+                    #fetch reservation details from the database
+                    reservation_query = """
+                        SELECT ReservationID, CustomerName, CustomerPhoneNO, Date, Time, TableID
+                        FROM Reservation
+                        WHERE BranchID = %s
+                    """
+                    cursor = db.cursor()
+                    cursor.execute(reservation_query, (branch_id,))
+                    reservation_results = cursor.fetchall()
+
+                    # show all the reservations in the window
+                    if reservation_results:
+                        for reservation_id, customer_name, customer_phone, date, time, table_id in reservation_results:
+                            reservation_info = f"{reservation_id}: {customer_name} - {customer_phone} - {date} - {time} - ({table_id})"
+                            tk.Label(view_reservation_window, text=reservation_info, font=fontStyle).pack()
+                    else:
+                        tk.Label(view_reservation_window, text="No reservation found for this branch.", font=fontStyle).pack()
+
+                    back_button = tk.Button(view_reservation_window, text="Back", command=view_reservation_window.destroy, **buttonStyle)
+                    back_button.pack(pady=10)
+
+                def cancel_reservation(selected_branch_info):
+                    # Create a new window for canceling reservation
+                    cancel_reservation_window = tk.Toplevel(window)
+                    cancel_reservation_window.title("Cancel Reservation")
+                    cancel_reservation_window.state('zoomed')
+                    # cancel_reservation_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+                    # Fetch reservation details from the database for the branch
+                    cursor = db.cursor()
+                    reservation_query = """
+                        SELECT ReservationID, CustomerName, CustomerPhoneNO, Date, Time, TableID
+                        FROM Reservation
+                        WHERE BranchID = %s
+                    """
+                    cursor.execute(reservation_query, (branch_id,))
+                    reservation_results = cursor.fetchall()
+                    cursor.close()
+
+                    # Create a list of reservations for the dropdown
+                    reservation_list = [
+                        f"{row[0]}: {row[1]} - {row[2]} - {row[3]} - {row[4]}"
+                        for row in reservation_results
+                    ] if reservation_results else []
+
+                    reservation_var = tk.StringVar(cancel_reservation_window)
+                    reservation_var.set(reservation_list[0] if reservation_list else "No reservations available")
+                    reservation_dropdown = tk.OptionMenu(cancel_reservation_window, reservation_var, *reservation_list)
+                    reservation_dropdown.pack()
+
+                    def cancel_selected_reservation():
+                        selected_reservation_id = reservation_var.get().split(":")[0]
+                        cursor = db.cursor()
+                        try:
+                            # Start transaction
+                            cursor.execute("START TRANSACTION")
+                            
+                            # Get the TableID of the reservation to be canceled
+                            get_table_query = "SELECT TableID FROM Reservation WHERE ReservationID = %s"
+                            cursor.execute(get_table_query, (selected_reservation_id,))
+                            table_id = cursor.fetchone()
+                            
+                            if table_id:
+                                table_id = table_id[0]  # Extract the TableID
+                                
+                                # Delete the reservation
+                                delete_query = "DELETE FROM Reservation WHERE ReservationID = %s"
+                                cursor.execute(delete_query, (selected_reservation_id,))
+                                
+                                # Update the availability of the table
+                                update_table_query = "UPDATE Tables SET Availability = 1 WHERE TableID = %s"
+                                cursor.execute(update_table_query, (table_id,))
+                                
+                                # Commit the changes
+                                db.commit()
+                                messagebox.showinfo("Success", f"Reservation {selected_reservation_id} has been canceled and table {table_id} is now available.")
+                            else:
+                                db.rollback()  # Rollback if no TableID is found for the reservation
+                                messagebox.showinfo("Notice", f"Reservation {selected_reservation_id} was not found or has no associated table.")
+                            
+                            cancel_reservation_window.destroy()
+                        except Exception as e:
+                            db.rollback()
+                            messagebox.showerror("Error", f"An error occurred: {e}")
+                        finally:
+                            cursor.close()
+
+                    cancel_button = tk.Button(cancel_reservation_window, text="Cancel Reservation", command=cancel_selected_reservation, **buttonStyle)
+                    cancel_button.pack()
+
+                    back_button = tk.Button(cancel_reservation_window, text="Back", command=cancel_reservation_window.destroy, **buttonStyle)
+                    back_button.pack(pady=10)
+
+                # 3 buttons for taking reservation, viewing reservations, and cancel reservation
+                take_reservation_button = tk.Button(reservation_window, text="Take Reservation", command=lambda: [reservation_window.destroy(), take_reservation(selected_branch_info)], font=('Helvetica', 12, 'bold'), height=2, width=15)
+                view_reservations_button = tk.Button(reservation_window, text="View Reservations", command=lambda: [reservation_window.destroy(), view_reservations()], font=('Helvetica', 12, 'bold'), height=2, width=15)
+                cancel_reservation_button = tk.Button(reservation_window, text="Cancel Reservation", command=lambda: [reservation_window.destroy(), cancel_reservation(selected_branch_info)], font=('Helvetica', 12, 'bold'), height=2, width=15)
+
+                # Pack buttons in the center frame
+                take_reservation_button.pack(pady=10)
+                view_reservations_button.pack(pady=10)
+                cancel_reservation_button.pack(pady=10)
+
+                #back button to go back to the previous window
+                back_button = tk.Button(reservation_window, text="Back", command=lambda: [reservation_window.destroy()], **buttonStyle)
+                back_button.pack(pady=10)
+
+            # Create buttons
+            take_order_button = tk.Button(center_frame, text="Orders", command=order, font=('Helvetica', 12, 'bold'), height=2, width=15)
+            book_reservation_button = tk.Button(center_frame, text="Reservations", command=reservation, font=('Helvetica', 12, 'bold'), height=2, width=15)
+
+            # Pack buttons in the center frame
+            take_order_button.grid(row=0, column=0, padx=10, pady=10)
+            book_reservation_button.grid(row=0, column=1, padx=10, pady=10)
+
+            #back button to go to the previous window
+            back_button = tk.Button(center_frame, text="Back", command=lambda: [waiting_staff_window.destroy(), staff_roles_window], **buttonStyle)
+            back_button.grid(row=1, column=0, columnspan=2, pady=10)
+
+        elif role == "Kitchen Staff":
+            # Close the previous window
+            window.withdraw()
+
+            #get branch id from staff email and password
+            cursor = db.cursor()
+            cursor.execute("SELECT BranchID FROM Account WHERE Email = %s AND Password = %s", (email_entry.get(), password_entry.get()))
+            branch_id = cursor.fetchone()[0]
+            cursor.close()
+
+            #get branch info from branch id
+            cursor = db.cursor()
+            cursor.execute("SELECT City, PostCode FROM Branch WHERE BranchID = %s", (branch_id,))
+            branch_info = cursor.fetchone()
+            selected_branch_info = branch_info[0] + " - " + branch_info[1]
+            cursor.close()
+
+            kitchen_staff_window = tk.Toplevel(window)
+            kitchen_staff_window.title(f"Kitchen Staff Options - {selected_branch_info}")
+            kitchen_staff_window.state('zoomed')
+            # kitchen_staff_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+            # Center frame for holding the buttons
+            center_frame = tk.Frame(kitchen_staff_window)
+            center_frame.pack(expand=True)
+
+            # Define functionalities for each button (placeholder functions)
+
+            def view_orders():
+                view_orders_window = tk.Toplevel(window)
+                view_orders_window.title("View Orders")
+                view_orders_window.state('zoomed')
+                # view_orders_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+                # Fetch all orders with their corresponding StockType for the branch
+                cursor = db.cursor()
+                cursor.execute("""SELECT o.TrackID, s.StockType, o.TableID
+                                    FROM Orderr o
+                                    INNER JOIN Stock s ON o.StockID = s.StockID
+                                    WHERE o.TableID IN (
+                                        SELECT TableID FROM Tables WHERE BranchID = %s AND Availability = 0
+                                    )""", (branch_id,))
+                
+                order_results = cursor.fetchall()
+                cursor.close()
+
+                # print all the orders in the window
+
+                if order_results:
+                    for track_id, stock_type, table_id in order_results:
+                        order_info = f"{track_id}: {stock_type} - Table ID: {table_id}"
+                        tk.Label(view_orders_window, text=order_info, font=fontStyle).pack()
+                else:
+                    tk.Label(view_orders_window, text="No orders found for this branch.", font=fontStyle).pack()
+
+                back_button = tk.Button(view_orders_window, text="Back", command=view_orders_window.destroy, **buttonStyle)
+                back_button.pack(pady=10)
+
+            def update_stock():
+                
+                stock_options_window = tk.Toplevel(window)
+                stock_options_window.title(f"Stock Options - {selected_branch_info}")
+                stock_options_window.state('zoomed')
+
+                stock_center_frame = tk.Frame(stock_options_window)
+                stock_center_frame.pack(expand=True)
+                # stock_options_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+                # Define functionalities for each button 
+                view_stock_button = tk.Button(stock_center_frame, text="View Stock", command=lambda: view_stock(selected_branch_info), font=('Helvetica', 12, 'bold'), height=2, width=15)
+                add_stock_button = tk.Button(stock_center_frame, text="Add Stock", command=lambda: add_stock(selected_branch_info), font=('Helvetica', 12, 'bold'), height=2, width=15)
+                remove_stock_button = tk.Button(stock_center_frame, text="Remove Stock", command=lambda: remove_stock(selected_branch_info), font=('Helvetica', 12, 'bold'), height=2, width=15)
+                
+                # Pack buttons in the center frame
+                view_stock_button.grid(row=0, column=0, padx=10, pady=10)
+                add_stock_button.grid(row=0, column=1, padx=10, pady=10)
+                remove_stock_button.grid(row=0, column=2, padx=10, pady=10)
+
+                # Back button to go back to the previous window
+                back_button = tk.Button(stock_options_window, text="Back", command=stock_options_window.destroy, **buttonStyle)
+                back_button.pack(pady=10)
+
+            def view_stock(selected_branch_info):
+                view_stock_window = tk.Toplevel(window)
+                view_stock_window.title("View Stock")
+                view_stock_window.state('zoomed')
+                # view_stock_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+                # Fetch all stock for the branch
+                cursor = db.cursor()
+                cursor.execute("SELECT StockID, StockType, AmountInStock, Price FROM Stock WHERE BranchID = %s", (branch_id,))
+                stock_results = cursor.fetchall()
+
+                # Print all the stock in the window
+                if stock_results:
+                    for stock_id, stock_type, amount_in_stock, price in stock_results:
+                        stock_info = f"{stock_id}: {stock_type} - Amount: {amount_in_stock} - Price: £{price}"
+                        tk.Label(view_stock_window, text=stock_info, font=fontStyle).pack()
+
+                else:
+                    tk.Label(view_stock_window, text="No stock found for this branch.", font=fontStyle).pack()
+
+                back_button = tk.Button(view_stock_window, text="Back", command=view_stock_window.destroy, **buttonStyle)
+                back_button.pack(pady=10)
+            
+            def add_stock(selected_branch_info):
+                add_stock_window = tk.Toplevel(window)
+                add_stock_window.title("Add Stock")
+                add_stock_window.state('zoomed')
+                # add_stock_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+                # Entry fields for stock details
+                stock_type_label = tk.Label(add_stock_window, text="Stock Type:", font=fontStyle)
+                stock_type_label.pack()
+                stock_type_entry = tk.Entry(add_stock_window, font=fontStyle)
+                stock_type_entry.pack()
+
+                amount_in_stock_label = tk.Label(add_stock_window, text="Amount in Stock:", font=fontStyle)
+                amount_in_stock_label.pack()
+                amount_in_stock_entry = tk.Entry(add_stock_window, font=fontStyle)
+                amount_in_stock_entry.pack()
+
+                price_label = tk.Label(add_stock_window, text="Price:", font=fontStyle)
+                price_label.pack()
+                price_entry = tk.Entry(add_stock_window, font=fontStyle)
+                price_entry.pack()
+
+                # Submit function
+                def submit_stock_details():
+                    stock_type = stock_type_entry.get()
+                    amount_in_stock = amount_in_stock_entry.get()
+                    price = price_entry.get()
+
+                    # Generate Stock ID based on the last StockID
+                    cursor = db.cursor()
+                    cursor.execute("SELECT MAX(StockID) FROM Stock")
+                    last_stock_id_row = cursor.fetchone()
+                    last_stock_id = last_stock_id_row[0] if last_stock_id_row and last_stock_id_row[0] else "S0"
+                    new_stock_id_number = int(last_stock_id.lstrip("S")) + 1
+                    new_stock_id = "S" + str(new_stock_id_number)
+
+                    # Insert into database (adjust according to your schema)
+                    insert_query = """
+                        INSERT INTO Stock (StockID, StockType, AmountInStock, Price, BranchID)
+                        SELECT %s, %s, %s, %s, Branch.BranchID
+                        FROM Branch
+                        WHERE BranchID = (%s)
+                    """
+                    try:
+                        cursor.execute(insert_query, (new_stock_id, stock_type, amount_in_stock, price, branch_id))
+                        db.commit()
+                        messagebox.showinfo("Success", f"Stock {new_stock_id} successfully added.")
+                    except Exception as e:
+                        messagebox.showerror("Error", f"An error occurred: {e}")
+                    finally:
+                        add_stock_window.destroy()
+                        update_stock(selected_branch_info)
+
+                submit_button = tk.Button(add_stock_window, text="Submit", command=submit_stock_details, **buttonStyle)
+                submit_button.pack()
+                back_button = tk.Button(add_stock_window, text="Back", command=add_stock_window.destroy, **buttonStyle)
+                back_button.pack(pady=10)
+
+                # Separator
+                ttk.Separator(add_stock_window, orient='horizontal').pack(fill='x', pady=10)
+
+                #dropdown list of all available stock
+                def get_available_stock(branch_id):
+                    cursor = db.cursor()
+                    cursor.execute("SELECT StockID, StockType FROM Stock WHERE BranchID = %s", (branch_id,))
+                    return cursor.fetchall()
+                
+                available_stock = get_available_stock(branch_id)
+
+                stock_var = tk.StringVar(add_stock_window)
+                stock_var.set("Select stock")
+                stock_dropdown_label = tk.Label(add_stock_window, text="Select Stock:", font=fontStyle)
+                stock_dropdown_label.pack()
+                stock_dropdown = tk.OptionMenu(add_stock_window, stock_var, *[f"{stock[0]} - {stock[1]}" for stock in available_stock])
+                stock_dropdown.pack()
+
+                # add ammoount to stock text box
+                amount_to_add_label = tk.Label(add_stock_window, text="Amount to Add:", font=fontStyle)
+                amount_to_add_label.pack()
+                amount_to_add_entry = tk.Entry(add_stock_window, font=fontStyle)
+                amount_to_add_entry.pack()
+
+                #function to add stock
+                def add_stock():
+                    selected_stock_id = stock_var.get().split(" - ")[0]
+                    amount_to_add = amount_to_add_entry.get()
+
+                    if selected_stock_id.startswith("Select"):
+                        messagebox.showerror("Error", "You must select a valid stock.")
+                        return
+
+                    cursor = db.cursor()
+                    try:
+                        #update the stock amount
+                        update_stock_query = "UPDATE Stock SET AmountInStock = AmountInStock + %s WHERE StockID = %s"
+                        cursor.execute(update_stock_query, (amount_to_add, selected_stock_id))
+                        db.commit()
+                        messagebox.showinfo("Success", f"{amount_to_add} of stock {selected_stock_id} successfully added.")
+                    except Exception as e:
+                        messagebox.showerror("Error", f"An error occurred: {e}")
+                    finally:
+                        add_stock_window.destroy()
+                        update_stock(selected_branch_info)
+
+                add_button = tk.Button(add_stock_window, text="Add Stock", command=add_stock, **buttonStyle)
+                add_button.pack()
+
+                #back button to go back to the previous window
+                back_button = tk.Button(add_stock_window, text="Back", command=add_stock_window.destroy, **buttonStyle)
+                back_button.pack(pady=10)
+
+            def remove_stock(selected_branch_info):
+                remove_stock_window = tk.Toplevel(window)
+                remove_stock_window.title("Remove Stock")
+                remove_stock_window.state('zoomed')
+                # remove_stock_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+                # Fetch stock details from the database
+                stock_query = """
+                    SELECT StockID, StockType
+                    FROM Stock
+                    WHERE BranchID = (
+                        SELECT BranchID
+                        FROM Branch
+                        WHERE BranchID = %s
+                    )
+                """
+                cursor = db.cursor()
+                cursor.execute(stock_query, (branch_id,))
+                stock_results = cursor.fetchall()
+
+                # Create a list of stock for the dropdown
+                stock_list = [f"{row[0]}: {row[1]}" for row in stock_results] if stock_results else []
+
+                if stock_list:
+                    stock_var = tk.StringVar(remove_stock_window)
+                    stock_var.set(stock_list[0])
+                    stock_dropdown = tk.OptionMenu(remove_stock_window, stock_var, *stock_list)
+                    stock_dropdown.pack()
+            
+                    def remove_selected_stock():
+                        selected = stock_var.get().split(":")[0]
+                        delete_query = "DELETE FROM Stock WHERE StockID = %s"
+                        try:
+                            cursor.execute(delete_query, (selected,))
+                            db.commit()
+                            messagebox.showinfo("Success", f"Stock {selected} has been removed.")
+                            remove_stock_window.destroy()
+                        except Exception as e:
+                            messagebox.showerror("Error", f"An error occurred: {e}")
+                    
+                    remove_button = tk.Button(remove_stock_window, text="Remove Stock", command=remove_selected_stock, **buttonStyle)
+                    remove_button.pack()
+                    back_button = tk.Button(remove_stock_window, text="Back", command=remove_stock_window.destroy, **buttonStyle)
+                    back_button.pack(pady=10)
+
+                    #separator
+                    ttk.Separator(remove_stock_window, orient='horizontal').pack(fill='x', pady=10)
+
+                    #dropdown list of all available stock
+                    def get_available_stock(branch_id):
+                        cursor = db.cursor()
+                        cursor.execute("SELECT StockID, StockType FROM Stock WHERE BranchID = %s", (branch_id,))
+                        return cursor.fetchall()
+                    
+                    available_stock = get_available_stock(branch_id)
+
+                    stock_var = tk.StringVar(remove_stock_window)
+                    stock_var.set("Select stock")
+                    stock_dropdown_label = tk.Label(remove_stock_window, text="Select Stock:", font=fontStyle)
+                    stock_dropdown_label.pack()
+                    stock_dropdown = tk.OptionMenu(remove_stock_window, stock_var, *[f"{stock[0]} - {stock[1]}" for stock in available_stock])
+                    stock_dropdown.pack()
+
+                    # add ammoount to stock text box
+                    amount_to_remove_label = tk.Label(remove_stock_window, text="Amount to Remove:", font=fontStyle)
+                    amount_to_remove_label.pack()
+                    amount_to_remove_entry = tk.Entry(remove_stock_window, font=fontStyle)
+                    amount_to_remove_entry.pack()
+
+                    #function to add stock
+                    def remove_stock():
+                        selected_stock_id = stock_var.get().split(" - ")[0]
+                        amount_to_remove = amount_to_remove_entry.get()
+
+                        if selected_stock_id.startswith("Select"):
+                            messagebox.showerror("Error", "You must select a valid stock.")
+                            return
+
+                        cursor = db.cursor()
+                        try:
+                            #update the stock amount
+                            update_stock_query = "UPDATE Stock SET AmountInStock = AmountInStock - %s WHERE StockID = %s"
+                            cursor.execute(update_stock_query, (amount_to_remove, selected_stock_id))
+                            db.commit()
+                            messagebox.showinfo("Success", f"{amount_to_remove} of stock {selected_stock_id} successfully removed.")
+                        except Exception as e:
+                            messagebox.showerror("Error", f"An error occurred: {e}")
+                        finally:
+                            remove_stock_window.destroy()
+                            update_stock(selected_branch_info)
+
+                    remove_button = tk.Button(remove_stock_window, text="Remove Stock", command=remove_stock, **buttonStyle)
+                    remove_button.pack()
+
+                    #back button to go back to the previous window
+                    back_button = tk.Button(remove_stock_window, text="Back", command=remove_stock_window.destroy, **buttonStyle)
+                    back_button.pack(pady=10)
+                else:
+                    tk.Label(remove_stock_window, text="No stock found to remove.", font=fontStyle).pack()
+                    back_button = tk.Button(remove_stock_window, text="Back", command=remove_stock_window.destroy, **buttonStyle)
+                    back_button.pack(pady=10)
+            
+            # Create buttons
+            view_orders_button = tk.Button(center_frame, text="View Orders", command=view_orders, font=('Helvetica', 12, 'bold'), height=2, width=15)
+            update_stock_button = tk.Button(center_frame, text="Update Stock", command=update_stock, font=('Helvetica', 12, 'bold'), height=2, width=15)
+
+            # Pack buttons in the center frame
+            view_orders_button.grid(row=0, column=0, padx=10, pady=10)
+            update_stock_button.grid(row=0, column=1, padx=10, pady=10)
+
+            #back button to go to the previous window
+            back_button = tk.Button(center_frame, text="Back", command=lambda: [kitchen_staff_window.destroy(), staff_roles_window], **buttonStyle)
+            back_button.grid(row=1, column=0, columnspan=2, pady=10)
+
+        else:
+            show_staff(selected_branch_info, role, staff_roles_window)
+
+    button_waiting_staff = tk.Button(center_frame, text="Waiting Staff", command=lambda: button_click("Waiting Staff"), font=('Helvetica', 12, 'bold'), height=2, width=15)
+    button_manager = tk.Button(center_frame, text="Manager", command=lambda: button_click("Manager"), font=('Helvetica', 12, 'bold'), height=2, width=15)
+    button_kitchen_staff = tk.Button(center_frame, text="Kitchen Staff", command=lambda: button_click("Kitchen Staff"), font=('Helvetica', 12, 'bold'), height=2, width=15)
+    
+    show_all_staff_button = tk.Button(center_frame, text="Show all staff", command = show_all_staff, font=('Helvetica', 12, 'bold'), height=2, width=15)
+    add_staff_button = tk.Button(center_frame, text="Add staff", command=add_staff, font=('Helvetica', 12, 'bold'), height=2, width=15)
+    remove_staff_button = tk.Button(center_frame, text="Remove staff", command=remove_staff, font=('Helvetica', 12, 'bold'), height=2, width=15)
+
+    button_manager.grid(row=0, column=0, padx=10, pady=10)
+    button_waiting_staff.grid(row=0, column=1, padx=10, pady=10)
+    button_kitchen_staff.grid(row=0, column=2, padx=10, pady=10)
+    show_all_staff_button.grid(row=1, column=0, padx=10, pady=10)
+    add_staff_button.grid(row=1, column=1, padx=10, pady=10)
+    remove_staff_button.grid(row=1, column=2, padx=10, pady=10)
+
 def login_screen():
     def login():
         email = username_entry.get()
@@ -2630,6 +4105,8 @@ def login_screen():
                 waiting_staff_Login(username_entry, password_entry)
             elif role == 'Kitchen Staff':
                 Kitchen_Staff_Login(username_entry, password_entry)
+            elif role == 'Manager':
+                manager_Login(username_entry, password_entry)
             else:
                 print(f"Login successful! Role: {role}")
                 # Here, you would redirect to other role-specific interfaces
