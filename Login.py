@@ -261,7 +261,7 @@ def manager_options(selected_branch_info, previous_window):
         cursor = db.cursor()
         cursor.execute("SELECT BranchID FROM Branch WHERE City = %s AND PostCode = %s", (city, postcode))
         branch_id = cursor.fetchone()[0]
-        
+
 
         # Entry fields for stock details
         stock_type_label = tk.Label(add_stock_window, text="Stock Type:", font=fontStyle)
@@ -367,11 +367,6 @@ def manager_options(selected_branch_info, previous_window):
         #back button to go back to the previous window
         back_button = tk.Button(add_stock_window, text="Back", command=add_stock_window.destroy, **buttonStyle)
         back_button.pack(pady=10)
-
-
-
-        
-        
 
     def remove_stock(selected_branch_info):
         # Close the previous window (stock options window)
