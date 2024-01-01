@@ -1118,7 +1118,41 @@ def kitchen_staff_options(selected_branch_info, previous_window):
     # Define functionalities for each button (placeholder functions)
 
     def view_orders():
-        pass
+        view_orders_window = tk.Toplevel(window)
+        view_orders_window.title("View Orders")
+        view_orders_window.state('zoomed')
+        # view_orders_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+        # Extract the BranchID from the selected branch info
+        city, postcode = selected_branch_info.split(", ")
+        cursor = db.cursor()
+        cursor.execute("SELECT BranchID FROM Branch WHERE City = %s AND PostCode = %s", (city, postcode))
+        branch_id = cursor.fetchone()[0]
+        cursor.close()
+
+        # Fetch all orders with their corresponding StockType for the branch
+        cursor = db.cursor()
+        cursor.execute("""SELECT o.TrackID, s.StockType, o.TableID
+                            FROM Orderr o
+                            INNER JOIN Stock s ON o.StockID = s.StockID
+                            WHERE o.TableID IN (
+                                SELECT TableID FROM Tables WHERE BranchID = %s AND Availability = 0
+                            )""", (branch_id,))
+        
+        order_results = cursor.fetchall()
+        cursor.close()
+
+        # print all the orders in the window
+
+        if order_results:
+            for track_id, stock_type, table_id in order_results:
+                order_info = f"{track_id}: {stock_type} - Table ID: {table_id}"
+                tk.Label(view_orders_window, text=order_info, font=fontStyle).pack()
+        else:
+            tk.Label(view_orders_window, text="No orders found for this branch.", font=fontStyle).pack()
+
+        back_button = tk.Button(view_orders_window, text="Back", command=view_orders_window.destroy, **buttonStyle)
+        back_button.pack(pady=10)
 
     def update_stock():
          # Close the previous window (manager options window)
@@ -1412,6 +1446,7 @@ def kitchen_staff_options(selected_branch_info, previous_window):
             tk.Label(remove_stock_window, text="No stock found to remove.", font=fontStyle).pack()
             back_button = tk.Button(remove_stock_window, text="Back", command=remove_stock_window.destroy, **buttonStyle)
             back_button.pack(pady=10)
+    
     # Create buttons
     view_orders_button = tk.Button(center_frame, text="View Orders", command=view_orders, font=('Helvetica', 12, 'bold'), height=2, width=15)
     update_stock_button = tk.Button(center_frame, text="Update Stock", command=update_stock, font=('Helvetica', 12, 'bold'), height=2, width=15)
