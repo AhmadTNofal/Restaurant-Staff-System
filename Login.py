@@ -192,12 +192,11 @@ def manager_options(selected_branch_info, previous_window):
     manager_options_window.state('zoomed')
     # manager_options_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
 
-    def show_reports():
+    def branch_report():
         previous_window.destroy()
         show_reports_window = tk.Toplevel(window)
-        show_reports_window.title(f"Report - {selected_branch_info}")
+        show_reports_window.title(f"Branch report - {selected_branch_info}")
         show_reports_window.state('zoomed')
-
         city, postcode = selected_branch_info.split(", ")
 
         stock_query = """
@@ -222,14 +221,35 @@ def manager_options(selected_branch_info, previous_window):
         else:
             header_label = tk.Label(show_reports_window, text="Empty Stock", font=('Helvetica', 14, 'bold'))
             header_label.pack(pady=10)
-            
-
-
+        
         back_button = tk.Button(show_reports_window, text="Back", command=show_reports_window.destroy, **buttonStyle)
         back_button.pack(pady=10)
-        
+
+    def show_reports():
+        previous_window.destroy()
+
+        stock_options_window = tk.Toplevel(window)
+        stock_options_window.title(f"Reports - {selected_branch_info}")
+        stock_options_window.state('zoomed')
+
+        stock_center_frame = tk.Frame(stock_options_window)
+        stock_center_frame.pack(expand=True)
+
+        staff_report_button = tk.Button(stock_center_frame, text="Staff report",  font=('Helvetica', 12, 'bold'), height=2, width=15)
+        branch_report_button = tk.Button(stock_center_frame, text="Branch report", command=lambda: branch_report(), font=('Helvetica', 12, 'bold'), height=2, width=15)
+
+        staff_report_button.grid(row=0, column=0, padx=10, pady=10, sticky='nsew')
+        branch_report_button.grid(row=0, column=1, padx=10, pady=10, sticky='nsew')
+
+        stock_center_frame.grid_rowconfigure(0, weight=1)
+        stock_center_frame.grid_columnconfigure(0, weight=1)
+        stock_center_frame.grid_columnconfigure(1, weight=1)
+
+        back_button = tk.Button(stock_options_window, text="Back", command=stock_options_window.destroy, **buttonStyle)
+        back_button.pack(pady=10)
 
     
+
     def stock_options():
         # Close the previous window (manager options window)
         previous_window.destroy()
