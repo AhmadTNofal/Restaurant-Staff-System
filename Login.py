@@ -2611,7 +2611,6 @@ def Kitchen_Staff_Login(email_entry, password_entry):
     #logout button to go back to the login screen
     logout_button = tk.Button(center_frame, text="Logout", command=lambda: [kitchen_staff_window.destroy(), window.deiconify()], **buttonStyle)
     logout_button.grid(row=1, column=0, columnspan=2, padx=10, pady=10)
-    
 
 def login_screen():
     def login():
