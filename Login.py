@@ -380,6 +380,11 @@ def manager_options(selected_branch_info, previous_window):
         # Extract city and postcode from the selected_branch_info
         city, postcode = selected_branch_info.split(", ")
 
+        #get the branch id
+        cursor = db.cursor()
+        cursor.execute("SELECT BranchID FROM Branch WHERE City = %s AND PostCode = %s", (city, postcode))
+        branch_id = cursor.fetchone()[0]
+
         # Fetch stock details from the database
         stock_query = """
             SELECT StockID, StockType
@@ -416,6 +421,59 @@ def manager_options(selected_branch_info, previous_window):
             
             remove_button = tk.Button(remove_stock_window, text="Remove Stock", command=remove_selected_stock, **buttonStyle)
             remove_button.pack()
+            back_button = tk.Button(remove_stock_window, text="Back", command=remove_stock_window.destroy, **buttonStyle)
+            back_button.pack(pady=10)
+
+            #separator
+            ttk.Separator(remove_stock_window, orient='horizontal').pack(fill='x', pady=10)
+
+            #dropdown list of all available stock
+            def get_available_stock(branch_id):
+                cursor = db.cursor()
+                cursor.execute("SELECT StockID, StockType FROM Stock WHERE BranchID = %s", (branch_id,))
+                return cursor.fetchall()
+            
+            available_stock = get_available_stock(branch_id)
+
+            stock_var = tk.StringVar(remove_stock_window)
+            stock_var.set("Select stock")
+            stock_dropdown_label = tk.Label(remove_stock_window, text="Select Stock:", font=fontStyle)
+            stock_dropdown_label.pack()
+            stock_dropdown = tk.OptionMenu(remove_stock_window, stock_var, *[f"{stock[0]} - {stock[1]}" for stock in available_stock])
+            stock_dropdown.pack()
+
+            # add ammoount to stock text box
+            amount_to_remove_label = tk.Label(remove_stock_window, text="Amount to Remove:", font=fontStyle)
+            amount_to_remove_label.pack()
+            amount_to_remove_entry = tk.Entry(remove_stock_window, font=fontStyle)
+            amount_to_remove_entry.pack()
+
+            #function to add stock
+            def remove_stock():
+                selected_stock_id = stock_var.get().split(" - ")[0]
+                amount_to_remove = amount_to_remove_entry.get()
+
+                if selected_stock_id.startswith("Select"):
+                    messagebox.showerror("Error", "You must select a valid stock.")
+                    return
+
+                cursor = db.cursor()
+                try:
+                    #update the stock amount
+                    update_stock_query = "UPDATE Stock SET AmountInStock = AmountInStock - %s WHERE StockID = %s"
+                    cursor.execute(update_stock_query, (amount_to_remove, selected_stock_id))
+                    db.commit()
+                    messagebox.showinfo("Success", f"{amount_to_remove} of stock {selected_stock_id} successfully removed.")
+                except Exception as e:
+                    messagebox.showerror("Error", f"An error occurred: {e}")
+                finally:
+                    remove_stock_window.destroy()
+                    stock_options(selected_branch_info)
+
+            remove_button = tk.Button(remove_stock_window, text="Remove Stock", command=remove_stock, **buttonStyle)
+            remove_button.pack()
+
+            #back button to go back to the previous window
             back_button = tk.Button(remove_stock_window, text="Back", command=remove_stock_window.destroy, **buttonStyle)
             back_button.pack(pady=10)
         else:
