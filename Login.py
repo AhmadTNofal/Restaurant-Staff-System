@@ -255,7 +255,7 @@ def manager_options(selected_branch_info, previous_window):
         else:
             tk.Label(staff_report_window, text="No managers found for this branch.", font=fontStyle).pack()
 
-            #separator
+        #separator
         ttk.Separator(staff_report_window, orient='horizontal').pack(fill='x', pady=10)
 
         #Waiting staff report title
@@ -286,15 +286,17 @@ def manager_options(selected_branch_info, previous_window):
 
         # Fetch all kitchen staff for the branch
         cursor = db.cursor()
-        cursor.execute("SELECT AccountID, ForeName, SurName FROM Account WHERE BranchID = %s AND Role = 'Kitchen Staff'", (branch_id,))
+        cursor.execute("SELECT AccountID, ForeName, SurName, Points FROM Account WHERE BranchID = %s AND Role = 'Kitchen Staff'", (branch_id,))
         kitchen_staff_results = cursor.fetchall()
         cursor.close()
 
-        if kitchen_staff_results:
-            for account_id, forename, surname in kitchen_staff_results:
-                kitchen_staff_info = f"{account_id}: {forename} {surname}"
-                tk.Label(staff_report_window, text=kitchen_staff_info, font=fontStyle).pack()
+        #sort the staff by points
+        kitchen_staff_results.sort(key=lambda x: x[3], reverse=True)
 
+        if kitchen_staff_results:
+            for account_id, forename, surname, points in kitchen_staff_results:
+                kitchen_staff_info = f"{account_id}: {forename} {surname} - {points} points"
+                tk.Label(staff_report_window, text=kitchen_staff_info, font=fontStyle).pack()
         else:
             tk.Label(staff_report_window, text="No kitchen staff found for this branch.", font=fontStyle).pack()
 
@@ -2446,6 +2448,12 @@ def Kitchen_Staff_Login(email_entry, password_entry):
     branch_id = cursor.fetchone()[0]
     cursor.close()
 
+    #get account id from staff email and password
+    cursor = db.cursor()
+    cursor.execute("SELECT AccountID FROM Account WHERE Email = %s AND Password = %s", (email_entry.get(), password_entry.get()))
+    account_id = cursor.fetchone()[0]
+    cursor.close()
+
     #get branch info from branch id
     cursor = db.cursor()
     cursor.execute("SELECT City, PostCode FROM Branch WHERE BranchID = %s", (branch_id,))
@@ -2469,27 +2477,58 @@ def Kitchen_Staff_Login(email_entry, password_entry):
         view_orders_window.state('zoomed')
         # view_orders_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
 
+        # Listbox to display orders
+        orders_listbox = tk.Listbox(view_orders_window, width=50, height=20)
+        orders_listbox.pack(pady=20)
+
         # Fetch all orders with their corresponding StockType for the branch
         cursor = db.cursor()
         cursor.execute("""SELECT o.TrackID, s.StockType, o.TableID
-                            FROM Orderr o
-                            INNER JOIN Stock s ON o.StockID = s.StockID
-                            WHERE o.TableID IN (
-                                SELECT TableID FROM Tables WHERE BranchID = %s AND Availability = 0
-                            )""", (branch_id,))
+                        FROM Orderr o
+                        INNER JOIN Stock s ON o.StockID = s.StockID
+                        WHERE o.TableID IN (
+                            SELECT TableID FROM Tables WHERE BranchID = %s AND Availability = 0
+                        )""", (branch_id,))
         
         order_results = cursor.fetchall()
         cursor.close()
 
-        # print all the orders in the window
+        # Populate the listbox with orders
+        for order in order_results:
+            orders_listbox.insert(tk.END, f"{order[0]}: {order[1]} - Table ID: {order[2]}")
 
-        if order_results:
-            for track_id, stock_type, table_id in order_results:
-                order_info = f"{track_id}: {stock_type} - Table ID: {table_id}"
-                tk.Label(view_orders_window, text=order_info, font=fontStyle).pack()
-        else:
-            tk.Label(view_orders_window, text="No orders found for this branch.", font=fontStyle).pack()
+        def complete_order():
+            # Check if an order is selected
+            if orders_listbox.curselection():
+                index = orders_listbox.curselection()[0]
+                selected_order = orders_listbox.get(index)
+                track_id = selected_order.split(":")[0]
 
+                # Process to remove the order from the system and add points to the account
+                cursor = db.cursor()
+                try:
+                    cursor.execute("START TRANSACTION")
+
+                    #add 1 point to the account
+                    cursor.execute("UPDATE Account SET Points = Points + 1 WHERE AccountID = %s", (account_id,))
+
+                    db.commit()
+                    messagebox.showinfo("Success", "Order completed.")
+
+                    # Remove the order from the ListBox
+                    orders_listbox.delete(index)
+
+                except Exception as e:
+                    db.rollback()
+                    messagebox.showerror("Error", str(e))
+                finally:
+                    cursor.close()
+
+        # Button to mark an order as completed
+        complete_order_button = tk.Button(view_orders_window, text="Complete Order", command=complete_order, **buttonStyle)
+        complete_order_button.pack(pady=10)
+
+        # Button to go back to the previous window
         back_button = tk.Button(view_orders_window, text="Back", command=view_orders_window.destroy, **buttonStyle)
         back_button.pack(pady=10)
 
