@@ -225,6 +225,82 @@ def manager_options(selected_branch_info, previous_window):
         back_button = tk.Button(show_reports_window, text="Back", command=show_reports_window.destroy, **buttonStyle)
         back_button.pack(pady=10)
 
+    def staff_report():
+        staff_report_window = tk.Toplevel(window)
+        staff_report_window.title("Staff report")
+        staff_report_window.state('zoomed')
+        # staff_report_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+        #staff report title
+        header_label = tk.Label(staff_report_window, text="Managers", font=('Helvetica', 14, 'bold'))
+        header_label.pack(pady=10)
+
+        # Extract the BranchID from the selected branch info
+        city, postcode = selected_branch_info.split(", ")
+        cursor = db.cursor()
+        cursor.execute("SELECT BranchID FROM Branch WHERE City = %s AND PostCode = %s", (city, postcode))
+        branch_id = cursor.fetchone()[0]
+        cursor.close()
+
+        # Fetch all managers for the branch
+        cursor = db.cursor()
+        cursor.execute("SELECT AccountID, ForeName, SurName FROM Account WHERE BranchID = %s AND Role = 'Manager'", (branch_id,))
+        manager_results = cursor.fetchall()
+        cursor.close()
+
+        if manager_results:
+            for account_id, forename, surname in manager_results:
+                manager_info = f"{account_id}: {forename} {surname}"
+                tk.Label(staff_report_window, text=manager_info, font=fontStyle).pack()
+        else:
+            tk.Label(staff_report_window, text="No managers found for this branch.", font=fontStyle).pack()
+
+            #separator
+        ttk.Separator(staff_report_window, orient='horizontal').pack(fill='x', pady=10)
+
+        #Waiting staff report title
+        header_label = tk.Label(staff_report_window, text="Waiting Staff", font=('Helvetica', 14, 'bold'))
+        header_label.pack(pady=10)
+
+        # Fetch all waiting staff for the branch
+        cursor = db.cursor()
+        cursor.execute("SELECT AccountID, ForeName, SurName FROM Account WHERE BranchID = %s AND Role = 'Waiting Staff'", (branch_id,))
+        waiting_staff_results = cursor.fetchall()
+        cursor.close()
+
+        if waiting_staff_results:
+            for account_id, forename, surname in waiting_staff_results:
+                waiting_staff_info = f"{account_id}: {forename} {surname}"
+                tk.Label(staff_report_window, text=waiting_staff_info, font=fontStyle).pack()
+
+        else:
+            tk.Label(staff_report_window, text="No waiting staff found for this branch.", font=fontStyle).pack()
+
+        #separator
+        ttk.Separator(staff_report_window, orient='horizontal').pack(fill='x', pady=10)
+
+        #Kitchen staff report title
+        header_label = tk.Label(staff_report_window, text="Kitchen Staff", font=('Helvetica', 14, 'bold'))
+        header_label.pack(pady=10)
+
+        # Fetch all kitchen staff for the branch
+        cursor = db.cursor()
+        cursor.execute("SELECT AccountID, ForeName, SurName FROM Account WHERE BranchID = %s AND Role = 'Kitchen Staff'", (branch_id,))
+        kitchen_staff_results = cursor.fetchall()
+        cursor.close()
+
+        if kitchen_staff_results:
+            for account_id, forename, surname in kitchen_staff_results:
+                kitchen_staff_info = f"{account_id}: {forename} {surname}"
+                tk.Label(staff_report_window, text=kitchen_staff_info, font=fontStyle).pack()
+
+        else:
+            tk.Label(staff_report_window, text="No kitchen staff found for this branch.", font=fontStyle).pack()
+
+        back_button = tk.Button(staff_report_window, text="Back", command=staff_report_window.destroy, **buttonStyle)
+        back_button.pack(pady=10)
+
+
     def show_reports():
         previous_window.destroy()
 
@@ -235,7 +311,7 @@ def manager_options(selected_branch_info, previous_window):
         stock_center_frame = tk.Frame(stock_options_window)
         stock_center_frame.pack(expand=True)
 
-        staff_report_button = tk.Button(stock_center_frame, text="Staff report",  font=('Helvetica', 12, 'bold'), height=2, width=15)
+        staff_report_button = tk.Button(stock_center_frame, text="Staff report", command= lambda: staff_report(),  font=('Helvetica', 12, 'bold'), height=2, width=15)
         branch_report_button = tk.Button(stock_center_frame, text="Branch report", command=lambda: branch_report(), font=('Helvetica', 12, 'bold'), height=2, width=15)
 
         staff_report_button.grid(row=0, column=0, padx=10, pady=10, sticky='nsew')
