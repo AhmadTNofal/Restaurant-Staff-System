@@ -300,8 +300,23 @@ def manager_options(selected_branch_info, previous_window):
         else:
             tk.Label(staff_report_window, text="No kitchen staff found for this branch.", font=fontStyle).pack()
 
+        #reset the points of all staff
+        def reset_points():
+            cursor = db.cursor()
+            cursor.execute("UPDATE Account SET Points = 0 WHERE BranchID = %s", (branch_id,))
+            db.commit()
+            messagebox.showinfo("Success", f"Points for all staff in {city} - {postcode} reset to 0.")
+            staff_report_window.destroy()
+            manager_options(selected_branch_info, previous_window)
+
+        reset_points_button = tk.Button(staff_report_window, text="Reset Points", command=reset_points, **buttonStyle)
+        reset_points_button.pack(pady=10)
+
+
         back_button = tk.Button(staff_report_window, text="Back", command=staff_report_window.destroy, **buttonStyle)
         back_button.pack(pady=10)
+
+
 
     def show_reports():
         previous_window.destroy()
@@ -3990,7 +4005,7 @@ def manager_Login(email_entry, password_entry):
 
                 orders_listbox = tk.Listbox(view_orders_window, width=50, height=20)
                 orders_listbox.pack(pady=20)
-                
+
                 # Fetch all orders with their corresponding StockType for the branch
                 cursor = db.cursor()
                 cursor.execute("""SELECT o.TrackID, s.StockType, o.TableID
