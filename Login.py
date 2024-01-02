@@ -264,15 +264,16 @@ def manager_options(selected_branch_info, previous_window):
 
         # Fetch all waiting staff for the branch
         cursor = db.cursor()
-        cursor.execute("SELECT AccountID, ForeName, SurName FROM Account WHERE BranchID = %s AND Role = 'Waiting Staff'", (branch_id,))
+        cursor.execute("SELECT AccountID, ForeName, SurName, Points FROM Account WHERE BranchID = %s AND Role = 'Waiting Staff'", (branch_id,))
         waiting_staff_results = cursor.fetchall()
         cursor.close()
 
         if waiting_staff_results:
-            for account_id, forename, surname in waiting_staff_results:
-                waiting_staff_info = f"{account_id}: {forename} {surname}"
+            #sort the staff by points
+            waiting_staff_results.sort(key=lambda x: x[3], reverse=True)
+            for account_id, forename, surname, points in waiting_staff_results:
+                waiting_staff_info = f"{account_id}: {forename} {surname} - {points} points"
                 tk.Label(staff_report_window, text=waiting_staff_info, font=fontStyle).pack()
-
         else:
             tk.Label(staff_report_window, text="No waiting staff found for this branch.", font=fontStyle).pack()
 
@@ -1855,6 +1856,12 @@ def waiting_staff_Login(email_entry, password_entry):
     branch_id = cursor.fetchone()[0]
     cursor.close()
 
+    #get account id from staff email and password
+    cursor = db.cursor()
+    cursor.execute("SELECT AccountID FROM Account WHERE Email = %s AND Password = %s", (email_entry.get(), password_entry.get()))
+    account_id = cursor.fetchone()[0]
+    cursor.close()
+
     #get branch info from branch id
     cursor = db.cursor()
     cursor.execute("SELECT City, PostCode FROM Branch WHERE BranchID = %s", (branch_id,))
@@ -2138,6 +2145,12 @@ def waiting_staff_Login(email_entry, password_entry):
                     cursor.execute("UPDATE Tables SET Availability = 1 WHERE TableID = %s", (selected_table,))
                     cursor.close()
 
+                    #add 1 point to the account
+                    cursor = db.cursor()
+                    cursor.execute("UPDATE Account SET Points = Points + 1 WHERE AccountID = %s", (account_id,))
+                    cursor.close()
+
+
                     #delete the orders
                     cursor = db.cursor()
                     cursor.execute("DELETE FROM Orderr WHERE TableID = %s", (selected_table,))
@@ -2273,6 +2286,9 @@ def waiting_staff_Login(email_entry, password_entry):
 
                     # Update table availability
                     update_table_availability(selected_table, 0)
+
+                    #add 1 point to the account
+                    cursor.execute("UPDATE Account SET Points = Points + 1 WHERE AccountID = %s", (account_id,))
 
                     # Commit the transaction
                     db.commit()
