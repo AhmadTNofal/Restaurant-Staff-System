@@ -300,7 +300,6 @@ def manager_options(selected_branch_info, previous_window):
         back_button = tk.Button(staff_report_window, text="Back", command=staff_report_window.destroy, **buttonStyle)
         back_button.pack(pady=10)
 
-
     def show_reports():
         previous_window.destroy()
 
