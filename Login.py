@@ -1263,6 +1263,10 @@ def kitchen_staff_options(selected_branch_info, previous_window):
         view_orders_window.state('zoomed')
         # view_orders_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
 
+        # Listbox to display orders
+        orders_listbox = tk.Listbox(view_orders_window, width=50, height=20)
+        orders_listbox.pack(pady=20)
+
         # Extract the BranchID from the selected branch info
         city, postcode = selected_branch_info.split(", ")
         cursor = db.cursor()
@@ -1282,14 +1286,33 @@ def kitchen_staff_options(selected_branch_info, previous_window):
         order_results = cursor.fetchall()
         cursor.close()
 
-        # print all the orders in the window
+        # Populate the listbox with orders
+        for order in order_results:
+            orders_listbox.insert(tk.END, f"{order[0]}: {order[1]} - Table ID: {order[2]}")
 
-        if order_results:
-            for track_id, stock_type, table_id in order_results:
-                order_info = f"{track_id}: {stock_type} - Table ID: {table_id}"
-                tk.Label(view_orders_window, text=order_info, font=fontStyle).pack()
-        else:
-            tk.Label(view_orders_window, text="No orders found for this branch.", font=fontStyle).pack()
+        def complete_order():
+            # Check if an order is selected
+            if orders_listbox.curselection():
+                index = orders_listbox.curselection()[0]
+                selected_order = orders_listbox.get(index)
+                track_id = selected_order.split(":")[0]
+
+                # Process to remove the order from the system and add points to the account
+                cursor = db.cursor()
+                try:
+                    # Remove the order from the ListBox
+                    orders_listbox.delete(index)
+                    messagebox.showinfo("Success", "Order completed.")
+
+                except Exception as e:
+                    db.rollback()
+                    messagebox.showerror("Error", str(e))
+                finally:
+                    cursor.close()
+
+        # Button to mark an order as completed
+        complete_order_button = tk.Button(view_orders_window, text="Complete Order", command=complete_order, **buttonStyle)
+        complete_order_button.pack(pady=10)
 
         back_button = tk.Button(view_orders_window, text="Back", command=view_orders_window.destroy, **buttonStyle)
         back_button.pack(pady=10)
@@ -3965,6 +3988,9 @@ def manager_Login(email_entry, password_entry):
                 view_orders_window.state('zoomed')
                 # view_orders_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
 
+                orders_listbox = tk.Listbox(view_orders_window, width=50, height=20)
+                orders_listbox.pack(pady=20)
+                
                 # Fetch all orders with their corresponding StockType for the branch
                 cursor = db.cursor()
                 cursor.execute("""SELECT o.TrackID, s.StockType, o.TableID
@@ -3977,14 +4003,35 @@ def manager_Login(email_entry, password_entry):
                 order_results = cursor.fetchall()
                 cursor.close()
 
-                # print all the orders in the window
+                # Populate the listbox with orders
+                for order in order_results:
+                    orders_listbox.insert(tk.END, f"{order[0]}: {order[1]} - Table ID: {order[2]}")
 
-                if order_results:
-                    for track_id, stock_type, table_id in order_results:
-                        order_info = f"{track_id}: {stock_type} - Table ID: {table_id}"
-                        tk.Label(view_orders_window, text=order_info, font=fontStyle).pack()
-                else:
-                    tk.Label(view_orders_window, text="No orders found for this branch.", font=fontStyle).pack()
+                def complete_order():
+                    # Check if an order is selected
+                    if orders_listbox.curselection():
+                        index = orders_listbox.curselection()[0]
+                        selected_order = orders_listbox.get(index)
+                        track_id = selected_order.split(":")[0]
+
+                        # Process to remove the order from the system and add points to the account
+                        cursor = db.cursor()
+                        try:
+                            messagebox.showinfo("Success", "Order completed.")
+
+                            # Remove the order from the ListBox
+                            orders_listbox.delete(index)
+
+                        except Exception as e:
+                            db.rollback()
+                            messagebox.showerror("Error", str(e))
+                        finally:
+                            cursor.close()
+
+                # Button to mark an order as completed
+                complete_order_button = tk.Button(view_orders_window, text="Complete Order", command=complete_order, **buttonStyle)
+                complete_order_button.pack(pady=10)
+
 
                 back_button = tk.Button(view_orders_window, text="Back", command=view_orders_window.destroy, **buttonStyle)
                 back_button.pack(pady=10)
