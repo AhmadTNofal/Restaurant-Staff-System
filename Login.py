@@ -39,7 +39,7 @@ def select_branch_close():
 
 def invalid_screen():
 
-     #Create a new window for displaying invalid credentials message
+    #Create a new window for displaying invalid credentials message
     invalid_window = tk.Tk()
     invalid_window.title("Invalid Credentials")
     invalid_window.geometry("250x100")
@@ -122,8 +122,6 @@ def get_next_branch_id():
         return "B1"
 
 def add_tables_for_branch(branch_id, num_tables, cursor):
-    # Assuming the tables are identified with branch_id followed by a sequence number
-    # Example: B1-T1 for the first table in branch B1
     for i in range(1, num_tables + 1):
         table_id = f"{branch_id}-T{i}"
         cursor.execute("INSERT INTO Tables (TableID, BranchID) VALUES (%s, %s)", (table_id, branch_id))
