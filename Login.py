@@ -3070,7 +3070,7 @@ def manager_Login(email_entry, password_entry):
         back_button.pack(pady=10)
 
     def remove_staff():
-      # Create a new window for removing staff
+        # Create a new window for removing staff
         remove_staff_window = tk.Toplevel(window)
         remove_staff_window.title("Remove Staff")
         remove_staff_window.state('zoomed')
