@@ -7,6 +7,7 @@ from tkinter import messagebox
 from PIL import Image, ImageTk
 from PIL import Image, ImageEnhance
 from decimal import Decimal, InvalidOperation
+import datetime
 
 tree=None
 tree = None
@@ -192,6 +193,73 @@ def manager_options(selected_branch_info, previous_window):
     manager_options_window.title(f"Manager Options - {selected_branch_info}")
     manager_options_window.state('zoomed')
     # manager_options_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+    def calculate_branch_cost():
+        city, postcode = selected_branch_info.split(", ")
+        
+        # Get the branch id
+        cursor = db.cursor()
+        cursor.execute("SELECT BranchID FROM Branch WHERE City = %s AND PostCode = %s", (city, postcode))
+        branch_id = cursor.fetchone()[0]
+
+        # Get the total cost of all stock
+        cursor.execute("SELECT SUM(AmountInStock * Price) FROM Stock WHERE BranchID = %s", (branch_id,))
+        total_stock_cost = cursor.fetchone()[0] or 0
+
+        #today's date
+        today = datetime.date.today()
+
+        # current time
+        now = datetime.datetime.now()
+
+        # Create window to enter cost details
+        cost_window = tk.Toplevel(window)
+        cost_window.title("Enter Cost Details")
+        cost_window.state('zoomed')
+        # cost_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+        # Utility Cost entry
+        utility_cost_label = tk.Label(cost_window, text="Utility Cost:", font=fontStyle)
+        utility_cost_label.pack(pady=(10, 0))
+        utility_cost_entry = tk.Entry(cost_window, font=fontStyle)
+        utility_cost_entry.pack(pady=(0, 10))
+
+        # Wages entry
+        wages_label = tk.Label(cost_window, text="Wages:", font=fontStyle)
+        wages_label.pack(pady=(10, 0))
+        wages_entry = tk.Entry(cost_window, font=fontStyle)
+        wages_entry.pack(pady=(0, 20))
+
+        # Submit function
+        def submit_cost_details():
+            try:
+                utility_cost = Decimal(utility_cost_entry.get())
+                wages = Decimal(wages_entry.get())
+                total_cost = total_stock_cost + utility_cost + wages
+
+                # Generate Cost ID
+                cursor.execute("SELECT CostID FROM Cost ORDER BY CAST(SUBSTRING(CostID, 2) AS UNSIGNED) DESC Limit 1;")
+                last_cost_id_row = cursor.fetchone()
+                last_cost_id = last_cost_id_row[0] if last_cost_id_row and last_cost_id_row[0] else "C0"
+                new_cost_id_number = int(last_cost_id.lstrip("C")) + 1
+                new_cost_id = "C" + str(new_cost_id_number)
+
+                # Insert the cost details into the database
+                insert_query = "INSERT INTO Cost (CostID, UtilityCost, Wages, StockCost, TotalCost, BranchID, Date, Time) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+                cursor.execute(insert_query, (new_cost_id, utility_cost, wages, total_stock_cost, float(total_cost), branch_id, today, now))
+                db.commit()
+                messagebox.showinfo("Success", f"Cost {new_cost_id} successfully added. Total cost: £{total_cost}")
+                cost_window.destroy()
+            except ValueError:
+                messagebox.showerror("Error", "Please enter valid numbers for utility cost and wages.")
+            except Exception as e:
+                db.rollback()
+                messagebox.showerror("Error", f"An error occurred: {str(e)}")
+
+        submit_button = tk.Button(cost_window, text="Submit", command=submit_cost_details, **buttonStyle)
+        submit_button.pack()
+
+        back_button = tk.Button(cost_window, text="Back", command=cost_window.destroy, **buttonStyle)
+        back_button.pack(pady=10)
 
     def branch_report():
         previous_window.destroy()
@@ -222,71 +290,29 @@ def manager_options(selected_branch_info, previous_window):
         else:
             header_label = tk.Label(show_reports_window, text="Empty Stock", font=('Helvetica', 14, 'bold'))
             header_label.pack(pady=10)
+
+        #separator
+        ttk.Separator(show_reports_window, orient='horizontal').pack(fill='x', pady=10)
+
+        #heading for the total cost
+        header_label = tk.Label(show_reports_window, text="Cost Details", font=('Helvetica', 14, 'bold'))
+        header_label.pack(pady=10)
         
-        def calculate_branch_cost():
-            city, postcode = selected_branch_info.split(", ")
-            
-            # Get the branch id
-            cursor = db.cursor()
-            cursor.execute("SELECT BranchID FROM Branch WHERE City = %s AND PostCode = %s", (city, postcode))
-            branch_id = cursor.fetchone()[0]
+        #print cost details for the branch
+        cursor = db.cursor()
+        cursor.execute("SELECT CostID, UtilityCost, Wages, StockCost, TotalCost, Date, Time FROM Cost WHERE BranchID = (SELECT BranchID FROM Branch WHERE City = %s AND PostCode = %s)", (city, postcode))
+        cost_details = cursor.fetchall()
 
-            # Get the total cost of all stock
-            cursor.execute("SELECT SUM(AmountInStock * Price) FROM Stock WHERE BranchID = %s", (branch_id,))
-            total_stock_cost = cursor.fetchone()[0] or 0
+        if cost_details:
+            #show all costs not just the last order the cost by date and time 
+            cost_details.sort(key=lambda x: (x[5], x[6]), reverse=True)
+            for cost_id, utility_cost, wages, stock_cost, total_cost, date, time in cost_details:
+                cost_info = f"{cost_id}: Utility Cost - £{utility_cost}, Wages - £{wages}, Stock Cost - £{stock_cost}, Total Cost - £{total_cost}, Date - {date}, Time - {time}"
+                tk.Label(show_reports_window, text=cost_info, font=fontStyle).pack()
+        else:
+            tk.Label(show_reports_window, text="No cost details found.", font=fontStyle).pack()
 
-            # Create window to enter cost details
-            cost_window = tk.Toplevel(window)
-            cost_window.title("Enter Cost Details")
-            cost_window.state('zoomed')
-            # cost_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
 
-            # Utility Cost entry
-            utility_cost_label = tk.Label(cost_window, text="Utility Cost:", font=fontStyle)
-            utility_cost_label.pack(pady=(10, 0))
-            utility_cost_entry = tk.Entry(cost_window, font=fontStyle)
-            utility_cost_entry.pack(pady=(0, 10))
-
-            # Wages entry
-            wages_label = tk.Label(cost_window, text="Wages:", font=fontStyle)
-            wages_label.pack(pady=(10, 0))
-            wages_entry = tk.Entry(cost_window, font=fontStyle)
-            wages_entry.pack(pady=(0, 20))
-
-            # Submit function
-            def submit_cost_details():
-                try:
-                    utility_cost = Decimal(utility_cost_entry.get())
-                    wages = Decimal(wages_entry.get())
-                    total_cost = total_stock_cost + utility_cost + wages
-
-                    # Generate Cost ID
-                    cursor.execute("SELECT CostID FROM Cost ORDER BY CAST(SUBSTRING(CostID, 2) AS UNSIGNED) DESC Limit 1;")
-                    last_cost_id_row = cursor.fetchone()
-                    last_cost_id = last_cost_id_row[0] if last_cost_id_row and last_cost_id_row[0] else "C0"
-                    new_cost_id_number = int(last_cost_id.lstrip("C")) + 1
-                    new_cost_id = "C" + str(new_cost_id_number)
-
-                    # Insert the cost details into the database
-                    insert_query = "INSERT INTO Cost (CostID, UtilityCost, Wages, StockCost, TotalCost, BranchID) VALUES (%s, %s, %s, %s, %s, %s)"
-                    cursor.execute(insert_query, (new_cost_id, utility_cost, wages, total_stock_cost, float(total_cost), branch_id))
-                    db.commit()
-                    messagebox.showinfo("Success", f"Cost {new_cost_id} successfully added. Total cost: £{total_cost}")
-                    cost_window.destroy()
-                except ValueError:
-                    messagebox.showerror("Error", "Please enter valid numbers for utility cost and wages.")
-                except Exception as e:
-                    db.rollback()
-                    messagebox.showerror("Error", f"An error occurred: {str(e)}")
-
-            submit_button = tk.Button(cost_window, text="Submit", command=submit_cost_details, **buttonStyle)
-            submit_button.pack()
-
-            back_button = tk.Button(cost_window, text="Back", command=cost_window.destroy, **buttonStyle)
-            back_button.pack(pady=10)
-
-        calculate_cost_button = tk.Button(show_reports_window, text="Calculate Branch Cost", command=lambda:calculate_branch_cost(), **buttonStyle)
-        calculate_cost_button.pack(pady=10)
 
         back_button = tk.Button(show_reports_window, text="Back", command=show_reports_window.destroy, **buttonStyle)
         back_button.pack(pady=10)
@@ -713,6 +739,8 @@ def manager_options(selected_branch_info, previous_window):
     stock_options_button.grid(row=0, column=3, padx=10, pady=10)
     show_reports_button.grid(row=0, column=4, padx=10, pady=10)
 
+    calculate_cost_button = tk.Button(manager_options_window, text="Calculate Branch Cost", command=lambda:calculate_branch_cost(), **buttonStyle)
+    calculate_cost_button.pack(pady=10)
     back_button = tk.Button(manager_options_window, text="Back", command=lambda: [manager_options_window.destroy(), open_staff_roles_window(selected_branch_info)], **buttonStyle)
     back_button.pack(side=tk.BOTTOM, pady=10)
 
