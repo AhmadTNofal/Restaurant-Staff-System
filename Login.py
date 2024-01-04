@@ -399,6 +399,46 @@ def manager_options(selected_branch_info, previous_window):
             staff_report_window.destroy()
             manager_options(selected_branch_info, previous_window)
 
+        #separator
+        ttk.Separator(staff_report_window, orient='horizontal').pack(fill='x', pady=10)
+
+        #number of managers heading
+        header_label = tk.Label(staff_report_window, text="Number of Staff", font=('Helvetica', 14, 'bold'))
+        header_label.pack(pady=10)
+
+        cursor = db.cursor()
+        cursor.execute("SELECT AccountID, ForeName, SurName FROM Account WHERE BranchID = %s AND Role = 'Manager'", (branch_id,))
+        manager_results = cursor.fetchall()
+        cursor.close()
+
+        # Print the number of managers
+        number_of_managers = len(manager_results)
+        tk.Label(staff_report_window, text=f"Number of Managers: {number_of_managers}", font=fontStyle).pack()
+
+        #number of waiting staff heading
+        cursor = db.cursor()
+        cursor.execute("SELECT AccountID, ForeName, SurName FROM Account WHERE BranchID = %s AND Role = 'Waiting Staff'", (branch_id,))
+        waiting_staff_results = cursor.fetchall()
+
+        # Print the number of waiting staff
+        number_of_waiting_staff = len(waiting_staff_results)
+        tk.Label(staff_report_window, text=f"Number of Waiting Staff: {number_of_waiting_staff}", font=fontStyle).pack()
+
+        #number of kitchen staff heading
+        cursor = db.cursor()
+        cursor.execute("SELECT AccountID, ForeName, SurName FROM Account WHERE BranchID = %s AND Role = 'Kitchen Staff'", (branch_id,))
+        kitchen_staff_results = cursor.fetchall()
+
+        # Print the number of kitchen staff
+        number_of_kitchen_staff = len(kitchen_staff_results)
+        tk.Label(staff_report_window, text=f"Number of Kitchen Staff: {number_of_kitchen_staff}", font=fontStyle).pack()
+
+        #total number of staff heading
+        total_number_of_staff = number_of_managers + number_of_waiting_staff + number_of_kitchen_staff
+
+        # Print the total number of staff
+        tk.Label(staff_report_window, text=f"Total Number of Staff: {total_number_of_staff}", font=fontStyle).pack()
+
         reset_points_button = tk.Button(staff_report_window, text="Reset Points", command=reset_points, **buttonStyle)
         reset_points_button.pack(pady=10)
 
@@ -1421,7 +1461,7 @@ def kitchen_staff_options(selected_branch_info, previous_window):
         back_button.pack(pady=10)
 
     def update_stock():
-         # Close the previous window (manager options window)
+        # Close the previous window (manager options window)
         previous_window.destroy()
         
         stock_options_window = tk.Toplevel(window)
@@ -3142,9 +3182,282 @@ def manager_Login(email_entry, password_entry):
             manager_options_window.state('zoomed')
             # manager_options_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
 
+            def calculate_branch_cost():
+                # Get the branch id
+                cursor = db.cursor()
+                cursor.execute("SELECT BranchID FROM Branch WHERE BranchID = %s", (branch_id,))
+                branch_id = cursor.fetchone()[0]
+
+                # Get the total cost of all stock
+                cursor.execute("SELECT SUM(AmountInStock * Price) FROM Stock WHERE BranchID = %s", (branch_id,))
+                total_stock_cost = cursor.fetchone()[0] or 0
+
+                #today's date
+                today = datetime.date.today()
+
+                # current time
+                now = datetime.datetime.now()
+
+                # Create window to enter cost details
+                cost_window = tk.Toplevel(window)
+                cost_window.title("Enter Cost Details")
+                cost_window.state('zoomed')
+                # cost_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+                # Utility Cost entry
+                utility_cost_label = tk.Label(cost_window, text="Utility Cost:", font=fontStyle)
+                utility_cost_label.pack(pady=(10, 0))
+                utility_cost_entry = tk.Entry(cost_window, font=fontStyle)
+                utility_cost_entry.pack(pady=(0, 10))
+
+                # Wages entry
+                wages_label = tk.Label(cost_window, text="Wages:", font=fontStyle)
+                wages_label.pack(pady=(10, 0))
+                wages_entry = tk.Entry(cost_window, font=fontStyle)
+                wages_entry.pack(pady=(0, 20))
+
+                # Submit function
+                def submit_cost_details():
+                    try:
+                        utility_cost = Decimal(utility_cost_entry.get())
+                        wages = Decimal(wages_entry.get())
+                        total_cost = total_stock_cost + utility_cost + wages
+
+                        # Generate Cost ID
+                        cursor.execute("SELECT CostID FROM Cost ORDER BY CAST(SUBSTRING(CostID, 2) AS UNSIGNED) DESC Limit 1;")
+                        last_cost_id_row = cursor.fetchone()
+                        last_cost_id = last_cost_id_row[0] if last_cost_id_row and last_cost_id_row[0] else "C0"
+                        new_cost_id_number = int(last_cost_id.lstrip("C")) + 1
+                        new_cost_id = "C" + str(new_cost_id_number)
+
+                        # Insert the cost details into the database
+                        insert_query = "INSERT INTO Cost (CostID, UtilityCost, Wages, StockCost, TotalCost, BranchID, Date, Time) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+                        cursor.execute(insert_query, (new_cost_id, utility_cost, wages, total_stock_cost, float(total_cost), branch_id, today, now))
+                        db.commit()
+                        messagebox.showinfo("Success", f"Cost {new_cost_id} successfully added. Total cost: £{total_cost}")
+                        cost_window.destroy()
+                    except ValueError:
+                        messagebox.showerror("Error", "Please enter valid numbers for utility cost and wages.")
+                    except Exception as e:
+                        db.rollback()
+                        messagebox.showerror("Error", f"An error occurred: {str(e)}")
+
+                submit_button = tk.Button(cost_window, text="Submit", command=submit_cost_details, **buttonStyle)
+                submit_button.pack()
+
+                back_button = tk.Button(cost_window, text="Back", command=cost_window.destroy, **buttonStyle)
+                back_button.pack(pady=10)
+
+            def branch_report():
+                manager_options_window.destroy()
+                show_reports_window = tk.Toplevel(window)
+                show_reports_window.title(f"Branch report - {selected_branch_info}")
+                show_reports_window.state('zoomed')
+                city, postcode = selected_branch_info.split(", ")
+
+                stock_query = """
+                    SELECT StockID, StockType, AmountInStock, Price
+                    FROM Stock
+                    WHERE BranchID = (
+                        SELECT BranchID
+                        FROM Branch
+                        WHERE BranchID = %s
+                    )
+                """
+                cursor = db.cursor()
+                cursor.execute(stock_query, (branch_id,))
+                stock_results = cursor.fetchall()
+
+                if stock_results:
+                    header_label = tk.Label(show_reports_window, text="Stock for this branch", font=('Helvetica', 14, 'bold'))
+                    header_label.pack(pady=10)
+                    for stock_id, stock_type, amount_in_stock, price in stock_results:
+                        stock_info = f"{stock_id}: {stock_type} - {amount_in_stock} in stock - £{price}"
+                        tk.Label(show_reports_window, text=stock_info, font=fontStyle).pack()
+                else:
+                    header_label = tk.Label(show_reports_window, text="Empty Stock", font=('Helvetica', 14, 'bold'))
+                    header_label.pack(pady=10)
+
+                #separator
+                ttk.Separator(show_reports_window, orient='horizontal').pack(fill='x', pady=10)
+
+                #heading for the total cost
+                header_label = tk.Label(show_reports_window, text="Cost Details", font=('Helvetica', 14, 'bold'))
+                header_label.pack(pady=10)
+                
+                #print cost details for the branch
+                cursor = db.cursor()
+                cursor.execute("SELECT CostID, UtilityCost, Wages, StockCost, TotalCost, Date, Time FROM Cost WHERE BranchID = (SELECT BranchID FROM Branch WHERE BranchID = %s)", (branch_id,))
+                cost_details = cursor.fetchall()
+
+                if cost_details:
+                    #show all costs not just the last order the cost by date and time 
+                    cost_details.sort(key=lambda x: (x[5], x[6]), reverse=True)
+                    for cost_id, utility_cost, wages, stock_cost, total_cost, date, time in cost_details:
+                        cost_info = f"{cost_id}: Utility Cost - £{utility_cost}, Wages - £{wages}, Stock Cost - £{stock_cost}, Total Cost - £{total_cost}, Date - {date}, Time - {time}"
+                        tk.Label(show_reports_window, text=cost_info, font=fontStyle).pack()
+                else:
+                    tk.Label(show_reports_window, text="No cost details found.", font=fontStyle).pack()
+
+
+
+                back_button = tk.Button(show_reports_window, text="Back", command=show_reports_window.destroy, **buttonStyle)
+                back_button.pack(pady=10)
+
+            def staff_report():
+                staff_report_window = tk.Toplevel(window)
+                staff_report_window.title("Staff report")
+                staff_report_window.state('zoomed')
+                # staff_report_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+
+                #staff report title
+                header_label = tk.Label(staff_report_window, text="Managers", font=('Helvetica', 14, 'bold'))
+                header_label.pack(pady=10)
+
+                # Extract the BranchID from the selected branch info
+                city, postcode = selected_branch_info.split(", ")
+                cursor = db.cursor()
+                cursor.execute("SELECT BranchID FROM Branch WHERE BranchID = %s", (branch_id,))
+                branch_id = cursor.fetchone()[0]
+                cursor.close()
+
+                # Fetch all managers for the branch
+                cursor = db.cursor()
+                cursor.execute("SELECT AccountID, ForeName, SurName FROM Account WHERE BranchID = %s AND Role = 'Manager'", (branch_id,))
+                manager_results = cursor.fetchall()
+                cursor.close()
+
+                if manager_results:
+                    for account_id, forename, surname in manager_results:
+                        manager_info = f"{account_id}: {forename} {surname}"
+                        tk.Label(staff_report_window, text=manager_info, font=fontStyle).pack()
+                else:
+                    tk.Label(staff_report_window, text="No managers found for this branch.", font=fontStyle).pack()
+
+                #separator
+                ttk.Separator(staff_report_window, orient='horizontal').pack(fill='x', pady=10)
+
+                #Waiting staff report title
+                header_label = tk.Label(staff_report_window, text="Waiting Staff", font=('Helvetica', 14, 'bold'))
+                header_label.pack(pady=10)
+
+                # Fetch all waiting staff for the branch
+                cursor = db.cursor()
+                cursor.execute("SELECT AccountID, ForeName, SurName, Points FROM Account WHERE BranchID = %s AND Role = 'Waiting Staff'", (branch_id,))
+                waiting_staff_results = cursor.fetchall()
+                cursor.close()
+
+                if waiting_staff_results:
+                    #sort the staff by points
+                    waiting_staff_results.sort(key=lambda x: x[3], reverse=True)
+                    for account_id, forename, surname, points in waiting_staff_results:
+                        waiting_staff_info = f"{account_id}: {forename} {surname} - {points} points"
+                        tk.Label(staff_report_window, text=waiting_staff_info, font=fontStyle).pack()
+                else:
+                    tk.Label(staff_report_window, text="No waiting staff found for this branch.", font=fontStyle).pack()
+
+                #separator
+                ttk.Separator(staff_report_window, orient='horizontal').pack(fill='x', pady=10)
+
+                #Kitchen staff report title
+                header_label = tk.Label(staff_report_window, text="Kitchen Staff", font=('Helvetica', 14, 'bold'))
+                header_label.pack(pady=10)
+
+                # Fetch all kitchen staff for the branch
+                cursor = db.cursor()
+                cursor.execute("SELECT AccountID, ForeName, SurName, Points FROM Account WHERE BranchID = %s AND Role = 'Kitchen Staff'", (branch_id,))
+                kitchen_staff_results = cursor.fetchall()
+                cursor.close()
+
+                #sort the staff by points
+                kitchen_staff_results.sort(key=lambda x: x[3], reverse=True)
+
+                if kitchen_staff_results:
+                    for account_id, forename, surname, points in kitchen_staff_results:
+                        kitchen_staff_info = f"{account_id}: {forename} {surname} - {points} points"
+                        tk.Label(staff_report_window, text=kitchen_staff_info, font=fontStyle).pack()
+                else:
+                    tk.Label(staff_report_window, text="No kitchen staff found for this branch.", font=fontStyle).pack()
+
+                #reset the points of all staff
+                def reset_points():
+                    cursor = db.cursor()
+                    cursor.execute("UPDATE Account SET Points = 0 WHERE BranchID = %s", (branch_id,))
+                    db.commit()
+                    messagebox.showinfo("Success", f"Points for all staff in {city} - {postcode} reset to 0.")
+                    staff_report_window.destroy()
+                    manager_Login(email_entry, password_entry)
+
+                #separator
+                ttk.Separator(staff_report_window, orient='horizontal').pack(fill='x', pady=10)
+
+                #number of managers heading
+                header_label = tk.Label(staff_report_window, text="Number of Staff", font=('Helvetica', 14, 'bold'))
+                header_label.pack(pady=10)
+
+                cursor = db.cursor()
+                cursor.execute("SELECT AccountID, ForeName, SurName FROM Account WHERE BranchID = %s AND Role = 'Manager'", (branch_id,))
+                manager_results = cursor.fetchall()
+                cursor.close()
+
+                # Print the number of managers
+                number_of_managers = len(manager_results)
+                tk.Label(staff_report_window, text=f"Number of Managers: {number_of_managers}", font=fontStyle).pack()
+
+                #number of waiting staff heading
+                cursor = db.cursor()
+                cursor.execute("SELECT AccountID, ForeName, SurName FROM Account WHERE BranchID = %s AND Role = 'Waiting Staff'", (branch_id,))
+                waiting_staff_results = cursor.fetchall()
+
+                # Print the number of waiting staff
+                number_of_waiting_staff = len(waiting_staff_results)
+                tk.Label(staff_report_window, text=f"Number of Waiting Staff: {number_of_waiting_staff}", font=fontStyle).pack()
+
+                #number of kitchen staff heading
+                cursor = db.cursor()
+                cursor.execute("SELECT AccountID, ForeName, SurName FROM Account WHERE BranchID = %s AND Role = 'Kitchen Staff'", (branch_id,))
+                kitchen_staff_results = cursor.fetchall()
+
+                # Print the number of kitchen staff
+                number_of_kitchen_staff = len(kitchen_staff_results)
+                tk.Label(staff_report_window, text=f"Number of Kitchen Staff: {number_of_kitchen_staff}", font=fontStyle).pack()
+
+                #total number of staff heading
+                total_number_of_staff = number_of_managers + number_of_waiting_staff + number_of_kitchen_staff
+
+                # Print the total number of staff
+                tk.Label(staff_report_window, text=f"Total Number of Staff: {total_number_of_staff}", font=fontStyle).pack()
+
+                reset_points_button = tk.Button(staff_report_window, text="Reset Points", command=reset_points, **buttonStyle)
+                reset_points_button.pack(pady=10)
+
+
+                back_button = tk.Button(staff_report_window, text="Back", command=staff_report_window.destroy, **buttonStyle)
+                back_button.pack(pady=10)
+
             def show_reports():
-                pass  # Implement the functionality
-            
+                manager_options_window.destroy()
+
+                stock_options_window = tk.Toplevel(window)
+                stock_options_window.title(f"Reports - {selected_branch_info}")
+                stock_options_window.state('zoomed')
+
+                stock_center_frame = tk.Frame(stock_options_window)
+                stock_center_frame.pack(expand=True)
+
+                staff_report_button = tk.Button(stock_center_frame, text="Staff report", command= lambda: staff_report(),  font=('Helvetica', 12, 'bold'), height=2, width=15)
+                branch_report_button = tk.Button(stock_center_frame, text="Branch report", command=lambda: branch_report(), font=('Helvetica', 12, 'bold'), height=2, width=15)
+
+                staff_report_button.grid(row=0, column=0, padx=10, pady=10, sticky='nsew')
+                branch_report_button.grid(row=0, column=1, padx=10, pady=10, sticky='nsew')
+
+                stock_center_frame.grid_rowconfigure(0, weight=1)
+                stock_center_frame.grid_columnconfigure(0, weight=1)
+                stock_center_frame.grid_columnconfigure(1, weight=1)
+
+                back_button = tk.Button(stock_options_window, text="Back", command=stock_options_window.destroy, **buttonStyle)
+                back_button.pack(pady=10)
+    
             def stock_options():
                 
                 stock_options_window = tk.Toplevel(window)
