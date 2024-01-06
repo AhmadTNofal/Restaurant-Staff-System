@@ -57,7 +57,7 @@ db = mysql.connector.connect(
     password="P@ssw0rd",
     database="group1_asd"
 )
-widget.pack(anchor='center')
+
 def select_branch_close():
     window.destroy()
 
