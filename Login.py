@@ -9,12 +9,6 @@ from PIL import Image, ImageEnhance
 from decimal import Decimal, InvalidOperation
 import datetime
 
-tree=None
-tree = None
-stock_id_label = None
-stock_type_label = None
-amount_in_stock_label = None
-price_label = None
 # Initialize the main window
 window = tk.Tk()
 window.state('zoomed')
