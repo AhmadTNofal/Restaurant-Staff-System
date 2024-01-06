@@ -57,7 +57,7 @@ db = mysql.connector.connect(
     password="P@ssw0rd",
     database="group1_asd"
 )
-
+widget.pack(anchor='center')
 def select_branch_close():
     window.destroy()
 
@@ -259,6 +259,24 @@ def manager_options(selected_branch_info, previous_window):
     manager_options_window = tk.Toplevel(window)
     manager_options_window.title(f"Manager Options - {selected_branch_info}")
     manager_options_window.state('zoomed')
+
+
+    # hr_options_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+    top_border = tk.Canvas(manager_options_window, height=50, bg='black')
+    top_border.pack(side='top', fill='x')    
+    main_frame = tk.Frame(manager_options_window)
+    main_frame.pack(padx=20, pady=20)
+    title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+    title_label.pack(pady=(0, 10))
+    center_frame = tk.Frame(manager_options_window)
+    center_frame.pack(expand=True)
+    center_frame.grid_columnconfigure(0, weight=1)
+    logo_image = Image.open("restt.png")  # Replace with your logo path
+    logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+    logo_photo = ImageTk.PhotoImage(logo_image)
+    logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+    logo_label.image = logo_photo  # Keep a reference
+    logo_label.pack(side='left', padx=10, pady=5)
     # manager_options_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
     def calculate_branch_cost():
         city, postcode = selected_branch_info.split(", ")
@@ -333,6 +351,21 @@ def manager_options(selected_branch_info, previous_window):
         show_reports_window = tk.Toplevel(window)
         show_reports_window.title(f"Branch report - {selected_branch_info}")
         show_reports_window.state('zoomed')
+        top_border = tk.Canvas(show_reports_window, height=50, bg='black')
+        top_border.pack(side='top', fill='x')    
+        main_frame = tk.Frame(show_reports_window)
+        main_frame.pack(padx=20, pady=20)
+        title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+        title_label.pack(pady=(0, 10))
+        center_frame = tk.Frame(show_reports_window)
+        center_frame.pack(expand=True)
+        center_frame.grid_columnconfigure(0, weight=1)
+        logo_image = Image.open("restt.png")  # Replace with your logo path
+        logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+        logo_photo = ImageTk.PhotoImage(logo_image)
+        logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+        logo_label.image = logo_photo  # Keep a reference
+        logo_label.pack(side='left', padx=10, pady=5)
         city, postcode = selected_branch_info.split(", ")
 
         stock_query = """
@@ -389,7 +422,21 @@ def manager_options(selected_branch_info, previous_window):
         staff_report_window.title("Staff report")
         staff_report_window.state('zoomed')
         # staff_report_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
-
+        top_border = tk.Canvas(staff_report_window, height=50, bg='black')
+        top_border.pack(side='top', fill='x')    
+        main_frame = tk.Frame(staff_report_window)
+        main_frame.pack(padx=20, pady=20)
+        title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+        title_label.pack(pady=(0, 10))
+        center_frame = tk.Frame(staff_report_window)
+        center_frame.pack(expand=True)
+        center_frame.grid_columnconfigure(0, weight=1)
+        logo_image = Image.open("restt.png")  # Replace with your logo path
+        logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+        logo_photo = ImageTk.PhotoImage(logo_image)
+        logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+        logo_label.image = logo_photo  # Keep a reference
+        logo_label.pack(side='left', padx=10, pady=5)
         #staff report title
         header_label = tk.Label(staff_report_window, text="Managers", font=('Helvetica', 14, 'bold'))
         header_label.pack(pady=10)
@@ -521,7 +568,21 @@ def manager_options(selected_branch_info, previous_window):
         stock_options_window = tk.Toplevel(window)
         stock_options_window.title(f"Reports - {selected_branch_info}")
         stock_options_window.state('zoomed')
-
+        top_border = tk.Canvas(stock_options_window, height=50, bg='black')
+        top_border.pack(side='top', fill='x')    
+        main_frame = tk.Frame(stock_options_window)
+        main_frame.pack(padx=20, pady=20)
+        title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+        title_label.pack(pady=(0, 10))
+        center_frame = tk.Frame(stock_options_window)
+        center_frame.pack(expand=True)
+        center_frame.grid_columnconfigure(0, weight=1)
+        logo_image = Image.open("restt.png")  # Replace with your logo path
+        logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+        logo_photo = ImageTk.PhotoImage(logo_image)
+        logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+        logo_label.image = logo_photo  # Keep a reference
+        logo_label.pack(side='left', padx=10, pady=5)
         stock_center_frame = tk.Frame(stock_options_window)
         stock_center_frame.pack(expand=True)
 
@@ -545,7 +606,21 @@ def manager_options(selected_branch_info, previous_window):
         stock_options_window = tk.Toplevel(window)
         stock_options_window.title(f"Stock Options - {selected_branch_info}")
         stock_options_window.state('zoomed')
-
+        top_border = tk.Canvas(stock_options_window, height=50, bg='black')
+        top_border.pack(side='top', fill='x')    
+        main_frame = tk.Frame(stock_options_window)
+        main_frame.pack(padx=20, pady=20)
+        title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+        title_label.pack(pady=(0, 10))
+        center_frame = tk.Frame(stock_options_window)
+        center_frame.pack(expand=True)
+        center_frame.grid_columnconfigure(0, weight=1)
+        logo_image = Image.open("restt.png")  # Replace with your logo path
+        logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+        logo_photo = ImageTk.PhotoImage(logo_image)
+        logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+        logo_label.image = logo_photo  # Keep a reference
+        logo_label.pack(side='left', padx=10, pady=5)
         stock_center_frame = tk.Frame(stock_options_window)
         stock_center_frame.pack(expand=True)
         # stock_options_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
@@ -568,7 +643,21 @@ def manager_options(selected_branch_info, previous_window):
         view_stock_window = tk.Toplevel(window)
         view_stock_window.title("View Stock")
         view_stock_window.state('zoomed')
-
+        top_border = tk.Canvas(view_stock_window, height=50, bg='black')
+        top_border.pack(side='top', fill='x')    
+        main_frame = tk.Frame(view_stock_window)
+        main_frame.pack(padx=20, pady=20)
+        title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+        title_label.pack(pady=(0, 10))
+        center_frame = tk.Frame(view_stock_window)
+        center_frame.pack(expand=True)
+        center_frame.grid_columnconfigure(0, weight=1)
+        logo_image = Image.open("restt.png")  # Replace with your logo path
+        logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+        logo_photo = ImageTk.PhotoImage(logo_image)
+        logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+        logo_label.image = logo_photo  # Keep a reference
+        logo_label.pack(side='left', padx=10, pady=5)
         # Extract city and postcode from the selected_branch_info
         city, postcode = selected_branch_info.split(", ")
 
@@ -603,7 +692,21 @@ def manager_options(selected_branch_info, previous_window):
         add_stock_window.title("Add Stock")
         add_stock_window.state('zoomed')
         # add_stock_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
-
+        top_border = tk.Canvas(add_stock_window, height=50, bg='black')
+        top_border.pack(side='top', fill='x')    
+        main_frame = tk.Frame(add_stock_window)
+        main_frame.pack(padx=20, pady=20)
+        title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+        title_label.pack(pady=(0, 10))
+        center_frame = tk.Frame(add_stock_window)
+        center_frame.pack(expand=True)
+        center_frame.grid_columnconfigure(0, weight=1)
+        logo_image = Image.open("restt.png")  # Replace with your logo path
+        logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+        logo_photo = ImageTk.PhotoImage(logo_image)
+        logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+        logo_label.image = logo_photo  # Keep a reference
+        logo_label.pack(side='left', padx=10, pady=5)
         # Extract city and postcode from the selected_branch_info
         city, postcode = selected_branch_info.split(", ")
 
@@ -726,7 +829,21 @@ def manager_options(selected_branch_info, previous_window):
         remove_stock_window.title("Remove Stock")
         remove_stock_window.state('zoomed')
         # remove_stock_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
-
+        top_border = tk.Canvas(remove_stock_window, height=50, bg='black')
+        top_border.pack(side='top', fill='x')    
+        main_frame = tk.Frame(remove_stock_window)
+        main_frame.pack(padx=20, pady=20)
+        title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+        title_label.pack(pady=(0, 10))
+        center_frame = tk.Frame(remove_stock_window)
+        center_frame.pack(expand=True)
+        center_frame.grid_columnconfigure(0, weight=1)
+        logo_image = Image.open("restt.png")  # Replace with your logo path
+        logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+        logo_photo = ImageTk.PhotoImage(logo_image)
+        logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+        logo_label.image = logo_photo  # Keep a reference
+        logo_label.pack(side='left', padx=10, pady=5)
         # Extract city and postcode from the selected_branch_info
         city, postcode = selected_branch_info.split(", ")
 
@@ -858,6 +975,23 @@ def waiting_staff_options(selected_branch_info, previous_window):
     waiting_staff_window = tk.Toplevel(window)
     waiting_staff_window.title(f"Waiting Staff Options - {selected_branch_info}")
     waiting_staff_window.state('zoomed')
+    
+    # hr_options_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+    top_border = tk.Canvas(waiting_staff_window, height=50, bg='black')
+    top_border.pack(side='top', fill='x')    
+    main_frame = tk.Frame(waiting_staff_window)
+    main_frame.pack(padx=20, pady=20)
+    title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+    title_label.pack(pady=(0, 10))
+    center_frame = tk.Frame(waiting_staff_window)
+    center_frame.pack(expand=True)
+    center_frame.grid_columnconfigure(0, weight=1)
+    logo_image = Image.open("restt.png")  # Replace with your logo path
+    logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+    logo_photo = ImageTk.PhotoImage(logo_image)
+    logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+    logo_label.image = logo_photo  # Keep a reference
+    logo_label.pack(side='left', padx=10, pady=5)
     # waiting_staff_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
 
     # Center frame for holding the buttons
@@ -870,14 +1004,42 @@ def waiting_staff_options(selected_branch_info, previous_window):
         order_window.title("Order")
         order_window.state('zoomed')
         # take_order_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
-
+        top_border = tk.Canvas(order_window, height=50, bg='black')
+        top_border.pack(side='top', fill='x')    
+        main_frame = tk.Frame(order_window)
+        main_frame.pack(padx=20, pady=20)
+        title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+        title_label.pack(pady=(0, 10))
+        center_frame = tk.Frame(order_window)
+        center_frame.pack(expand=True)
+        center_frame.grid_columnconfigure(0, weight=1)
+        logo_image = Image.open("restt.png")  # Replace with your logo path
+        logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+        logo_photo = ImageTk.PhotoImage(logo_image)
+        logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+        logo_label.image = logo_photo  # Keep a reference
+        logo_label.pack(side='left', padx=10, pady=5)
         def take_order(selected_branch_info):
             # Create a new window for taking an order
             take_order_window = tk.Toplevel(window)
             take_order_window.title("Take Order")
             take_order_window.state('zoomed')
             # take_order_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
-
+            top_border = tk.Canvas(take_order_window, height=50, bg='black')
+            top_border.pack(side='top', fill='x')    
+            main_frame = tk.Frame(take_order_window)
+            main_frame.pack(padx=20, pady=20)
+            title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+            title_label.pack(pady=(0, 10))
+            center_frame = tk.Frame(take_order_window)
+            center_frame.pack(expand=True)
+            center_frame.grid_columnconfigure(0, weight=1)
+            logo_image = Image.open("restt.png")  # Replace with your logo path
+            logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+            logo_photo = ImageTk.PhotoImage(logo_image)
+            logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+            logo_label.image = logo_photo  # Keep a reference
+            logo_label.pack(side='left', padx=10, pady=5)
             # Extract the BranchID from the selected branch info
             city, postcode = selected_branch_info.split(", ")
             cursor = db.cursor()
@@ -965,7 +1127,21 @@ def waiting_staff_options(selected_branch_info, previous_window):
                 remove_order_window.title("Remove Order")
                 remove_order_window.state('zoomed')
                 # remove_order_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
-
+                top_border = tk.Canvas(remove_order_window, height=50, bg='black')
+                top_border.pack(side='top', fill='x')    
+                main_frame = tk.Frame(remove_order_window)
+                main_frame.pack(padx=20, pady=20)
+                title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+                title_label.pack(pady=(0, 10))
+                center_frame = tk.Frame(remove_order_window)
+                center_frame.pack(expand=True)
+                center_frame.grid_columnconfigure(0, weight=1)
+                logo_image = Image.open("restt.png")  # Replace with your logo path
+                logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+                logo_photo = ImageTk.PhotoImage(logo_image)
+                logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+                logo_label.image = logo_photo  # Keep a reference
+                logo_label.pack(side='left', padx=10, pady=5)
                 # Fetch all orders with their corresponding StockType for the branch
                 cursor = db.cursor()
                 cursor.execute("""
@@ -1047,6 +1223,21 @@ def waiting_staff_options(selected_branch_info, previous_window):
             view_orders_window.title("View Orders")
             view_orders_window.state('zoomed')
             # view_orders_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+            top_border = tk.Canvas(view_orders_window, height=50, bg='black')
+            top_border.pack(side='top', fill='x')    
+            main_frame = tk.Frame(view_orders_window)
+            main_frame.pack(padx=20, pady=20)
+            title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+            title_label.pack(pady=(0, 10))
+            center_frame = tk.Frame(view_orders_window)
+            center_frame.pack(expand=True)
+            center_frame.grid_columnconfigure(0, weight=1)
+            logo_image = Image.open("restt.png")  # Replace with your logo path
+            logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+            logo_photo = ImageTk.PhotoImage(logo_image)
+            logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+            logo_label.image = logo_photo  # Keep a reference
+            logo_label.pack(side='left', padx=10, pady=5)
 
             # Extract the BranchID from the selected branch info
             city, postcode = selected_branch_info.split(", ")
@@ -1084,7 +1275,21 @@ def waiting_staff_options(selected_branch_info, previous_window):
             print_receipt_window.title("Print Receipt")
             print_receipt_window.state('zoomed')
             # print_receipt_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
-
+            top_border = tk.Canvas(print_receipt_window, height=50, bg='black')
+            top_border.pack(side='top', fill='x')    
+            main_frame = tk.Frame(print_receipt_window)
+            main_frame.pack(padx=20, pady=20)
+            title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+            title_label.pack(pady=(0, 10))
+            center_frame = tk.Frame(print_receipt_window)
+            center_frame.pack(expand=True)
+            center_frame.grid_columnconfigure(0, weight=1)
+            logo_image = Image.open("restt.png")  # Replace with your logo path
+            logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+            logo_photo = ImageTk.PhotoImage(logo_image)
+            logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+            logo_label.image = logo_photo  # Keep a reference
+            logo_label.pack(side='left', padx=10, pady=5)
             # Extract the BranchID from the selected branch info
             city, postcode = selected_branch_info.split(", ")
             cursor = db.cursor()
@@ -1203,14 +1408,42 @@ def waiting_staff_options(selected_branch_info, previous_window):
         reservation_window.title("Reservation")
         reservation_window.state('zoomed')
         # reservation_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
-
+        top_border = tk.Canvas(reservation_window, height=50, bg='black')
+        top_border.pack(side='top', fill='x')    
+        main_frame = tk.Frame(reservation_window)
+        main_frame.pack(padx=20, pady=20)
+        title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+        title_label.pack(pady=(0, 10))
+        center_frame = tk.Frame(reservation_window)
+        center_frame.pack(expand=True)
+        center_frame.grid_columnconfigure(0, weight=1)
+        logo_image = Image.open("restt.png")  # Replace with your logo path
+        logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+        logo_photo = ImageTk.PhotoImage(logo_image)
+        logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+        logo_label.image = logo_photo  # Keep a reference
+        logo_label.pack(side='left', padx=10, pady=5)
         def take_reservation(selected_branch_info):
             # Create a new window for taking reservation
             take_reservation_window = tk.Toplevel(window)
             take_reservation_window.title("Take Reservation")
             take_reservation_window.state('zoomed')
             # take_reservation_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
-
+            top_border = tk.Canvas(take_reservation_window, height=50, bg='black')
+            top_border.pack(side='top', fill='x')    
+            main_frame = tk.Frame(take_reservation_window)
+            main_frame.pack(padx=20, pady=20)
+            title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+            title_label.pack(pady=(0, 10))
+            center_frame = tk.Frame(take_reservation_window)
+            center_frame.pack(expand=True)
+            center_frame.grid_columnconfigure(0, weight=1)
+            logo_image = Image.open("restt.png")  # Replace with your logo path
+            logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+            logo_photo = ImageTk.PhotoImage(logo_image)
+            logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+            logo_label.image = logo_photo  # Keep a reference
+            logo_label.pack(side='left', padx=10, pady=5)
             # Entry fields for reservation details
             customer_name_label = tk.Label(take_reservation_window, text="Customer Name:", font=fontStyle)
             customer_name_label.pack()
@@ -1319,7 +1552,21 @@ def waiting_staff_options(selected_branch_info, previous_window):
             view_reservation_window.title("View Reservation")
             view_reservation_window.state('zoomed')
             # view_reservation_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
-
+            top_border = tk.Canvas(view_reservation_window , height=50, bg='black')
+            top_border.pack(side='top', fill='x')    
+            main_frame = tk.Frame(view_reservation_window )
+            main_frame.pack(padx=20, pady=20)
+            title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+            title_label.pack(pady=(0, 10))
+            center_frame = tk.Frame(view_reservation_window )
+            center_frame.pack(expand=True)
+            center_frame.grid_columnconfigure(0, weight=1)
+            logo_image = Image.open("restt.png")  # Replace with your logo path
+            logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+            logo_photo = ImageTk.PhotoImage(logo_image)
+            logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+            logo_label.image = logo_photo  # Keep a reference
+            logo_label.pack(side='left', padx=10, pady=5)
             #get branch id from selected branch info
             city, postcode = selected_branch_info.split(", ")
             cursor = db.cursor(buffered=True)
@@ -1354,7 +1601,21 @@ def waiting_staff_options(selected_branch_info, previous_window):
             cancel_reservation_window = tk.Toplevel(window)
             cancel_reservation_window.title("Cancel Reservation")
             cancel_reservation_window.state('zoomed')
-
+            top_border = tk.Canvas(cancel_reservation_window , height=50, bg='black')
+            top_border.pack(side='top', fill='x')    
+            main_frame = tk.Frame(cancel_reservation_window)
+            main_frame.pack(padx=20, pady=20)
+            title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+            title_label.pack(pady=(0, 10))
+            center_frame = tk.Frame(cancel_reservation_window)
+            center_frame.pack(expand=True)
+            center_frame.grid_columnconfigure(0, weight=1)
+            logo_image = Image.open("restt.png")  # Replace with your logo path
+            logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+            logo_photo = ImageTk.PhotoImage(logo_image)
+            logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+            logo_label.image = logo_photo  # Keep a reference
+            logo_label.pack(side='left', padx=10, pady=5)
             # Retrieve the BranchID from the selected branch info
             city, postcode = selected_branch_info.split(", ")
             cursor = db.cursor()
@@ -1462,7 +1723,22 @@ def kitchen_staff_options(selected_branch_info, previous_window):
     kitchen_staff_window.title(f"Kitchen Staff Options - {selected_branch_info}")
     kitchen_staff_window.state('zoomed')
     # kitchen_staff_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
-
+    # hr_options_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+    top_border = tk.Canvas( kitchen_staff_window, height=50, bg='black')
+    top_border.pack(side='top', fill='x')    
+    main_frame = tk.Frame( kitchen_staff_window)
+    main_frame.pack(padx=20, pady=20)
+    title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+    title_label.pack(pady=(0, 10))
+    center_frame = tk.Frame( kitchen_staff_window)
+    center_frame.pack(expand=True)
+    center_frame.grid_columnconfigure(0, weight=1)
+    logo_image = Image.open("restt.png")  # Replace with your logo path
+    logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+    logo_photo = ImageTk.PhotoImage(logo_image)
+    logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+    logo_label.image = logo_photo  # Keep a reference
+    logo_label.pack(side='left', padx=10, pady=5)
     # Center frame for holding the buttons
     center_frame = tk.Frame(kitchen_staff_window)
     center_frame.pack(expand=True)
@@ -1474,7 +1750,21 @@ def kitchen_staff_options(selected_branch_info, previous_window):
         view_orders_window.title("View Orders")
         view_orders_window.state('zoomed')
         # view_orders_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
-
+        top_border = tk.Canvas(view_orders_window , height=50, bg='black')
+        top_border.pack(side='top', fill='x')    
+        main_frame = tk.Frame(view_orders_window)
+        main_frame.pack(padx=20, pady=20)
+        title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+        title_label.pack(pady=(0, 10))
+        center_frame = tk.Frame(view_orders_window)
+        center_frame.pack(expand=True)
+        center_frame.grid_columnconfigure(0, weight=1)
+        logo_image = Image.open("restt.png")  # Replace with your logo path
+        logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+        logo_photo = ImageTk.PhotoImage(logo_image)
+        logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+        logo_label.image = logo_photo  # Keep a reference
+        logo_label.pack(side='left', padx=10, pady=5)
         # Listbox to display orders
         orders_listbox = tk.Listbox(view_orders_window, width=50, height=20)
         orders_listbox.pack(pady=20)
@@ -1536,7 +1826,21 @@ def kitchen_staff_options(selected_branch_info, previous_window):
         stock_options_window = tk.Toplevel(window)
         stock_options_window.title(f"Stock Options - {selected_branch_info}")
         stock_options_window.state('zoomed')
-
+        top_border = tk.Canvas(stock_options_window , height=50, bg='black')
+        top_border.pack(side='top', fill='x')    
+        main_frame = tk.Frame(stock_options_window)
+        main_frame.pack(padx=20, pady=20)
+        title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+        title_label.pack(pady=(0, 10))
+        center_frame = tk.Framestock_options_window
+        center_frame.pack(expand=True)
+        center_frame.grid_columnconfigure(0, weight=1)
+        logo_image = Image.open("restt.png")  # Replace with your logo path
+        logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+        logo_photo = ImageTk.PhotoImage(logo_image)
+        logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+        logo_label.image = logo_photo  # Keep a reference
+        logo_label.pack(side='left', padx=10, pady=5)
         stock_center_frame = tk.Frame(stock_options_window)
         stock_center_frame.pack(expand=True)
         # stock_options_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
@@ -1559,7 +1863,21 @@ def kitchen_staff_options(selected_branch_info, previous_window):
         view_stock_window = tk.Toplevel(window)
         view_stock_window.title("View Stock")
         view_stock_window.state('zoomed')
-
+        top_border = tk.Canvas(view_stock_window , height=50, bg='black')
+        top_border.pack(side='top', fill='x')    
+        main_frame = tk.Frame(view_stock_window)
+        main_frame.pack(padx=20, pady=20)
+        title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+        title_label.pack(pady=(0, 10))
+        center_frame = tk.Framestock_options_window
+        center_frame.pack(expand=True)
+        center_frame.grid_columnconfigure(0, weight=1)
+        logo_image = Image.open("restt.png")  # Replace with your logo path
+        logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+        logo_photo = ImageTk.PhotoImage(logo_image)
+        logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+        logo_label.image = logo_photo  # Keep a reference
+        logo_label.pack(side='left', padx=10, pady=5)
         # Extract city and postcode from the selected_branch_info
         city, postcode = selected_branch_info.split(", ")
 
@@ -1594,7 +1912,21 @@ def kitchen_staff_options(selected_branch_info, previous_window):
         add_stock_window.title("Add Stock")
         add_stock_window.state('zoomed')
         # add_stock_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
-
+        top_border = tk.Canvas(add_stock_window , height=50, bg='black')
+        top_border.pack(side='top', fill='x')    
+        main_frame = tk.Frame(add_stock_window )
+        main_frame.pack(padx=20, pady=20)
+        title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+        title_label.pack(pady=(0, 10))
+        center_frame = tk.Framestock_options_window
+        center_frame.pack(expand=True)
+        center_frame.grid_columnconfigure(0, weight=1)
+        logo_image = Image.open("restt.png")  # Replace with your logo path
+        logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+        logo_photo = ImageTk.PhotoImage(logo_image)
+        logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+        logo_label.image = logo_photo  # Keep a reference
+        logo_label.pack(side='left', padx=10, pady=5)
         # Extract city and postcode from the selected_branch_info
         city, postcode = selected_branch_info.split(", ")
 
@@ -1867,7 +2199,22 @@ def open_staff_roles_window(selected_branch_info):
         all_staff_window.title("All Staff")
         all_staff_window.state('zoomed')
         # all_staff_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
-
+    # hr_options_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
+        top_border = tk.Canvas( all_staff_window , height=50, bg='black')
+        top_border.pack(side='top', fill='x')    
+        main_frame = tk.Frame( all_staff_window )
+        main_frame.pack(padx=20, pady=20)
+        title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+        title_label.pack(pady=(0, 10))
+        center_frame = tk.Frame( all_staff_window )
+        center_frame.pack(expand=True)
+        center_frame.grid_columnconfigure(0, weight=1)
+        logo_image = Image.open("restt.png")  # Replace with your logo path
+        logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+        logo_photo = ImageTk.PhotoImage(logo_image)
+        logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+        logo_label.image = logo_photo  # Keep a reference
+        logo_label.pack(side='left', padx=10, pady=5)
         cursor = db.cursor(buffered=True)
         all_staff_query = """
             SELECT AccountID, ForeName, SurName, Role
@@ -1890,7 +2237,21 @@ def open_staff_roles_window(selected_branch_info):
         add_staff_window.title("Add Staff")
         add_staff_window.state('zoomed')
         # add_staff_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
-
+        top_border = tk.Canvas( add_staff_window , height=50, bg='black')
+        top_border.pack(side='top', fill='x')    
+        main_frame = tk.Frame( add_staff_window)
+        main_frame.pack(padx=20, pady=20)
+        title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+        title_label.pack(pady=(0, 10))
+        center_frame = tk.Frame(add_staff_window)
+        center_frame.pack(expand=True)
+        center_frame.grid_columnconfigure(0, weight=1)
+        logo_image = Image.open("restt.png")  # Replace with your logo path
+        logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+        logo_photo = ImageTk.PhotoImage(logo_image)
+        logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+        logo_label.image = logo_photo  # Keep a reference
+        logo_label.pack(side='left', padx=10, pady=5)
         # Entry fields for staff details
         forename_label = tk.Label(add_staff_window, text="Forename:", font=fontStyle)
         forename_label.pack()
@@ -1970,7 +2331,21 @@ def open_staff_roles_window(selected_branch_info):
         remove_staff_window.title("Remove Staff")
         remove_staff_window.state('zoomed')
         # remove_staff_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
-
+        top_border = tk.Canvas(remove_staff_window, height=50, bg='black')
+        top_border.pack(side='top', fill='x')    
+        main_frame = tk.Frame(remove_staff_window)
+        main_frame.pack(padx=20, pady=20)
+        title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+        title_label.pack(pady=(0, 10))
+        center_frame = tk.Frame(remove_staff_window)
+        center_frame.pack(expand=True)
+        center_frame.grid_columnconfigure(0, weight=1)
+        logo_image = Image.open("restt.png")  # Replace with your logo path
+        logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+        logo_photo = ImageTk.PhotoImage(logo_image)
+        logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+        logo_label.image = logo_photo  # Keep a reference
+        logo_label.pack(side='left', padx=10, pady=5)
         # Fetch staff details from the database
         staff_query = """
             SELECT AccountID, ForeName, SurName
@@ -2157,6 +2532,21 @@ def waiting_staff_Login(email_entry, password_entry):
     waiting_staff_window.state('zoomed')
     # waiting_staff_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
 
+    top_border = tk.Canvas(waiting_staff_window, height=50, bg='black')
+    top_border.pack(side='top', fill='x')    
+    main_frame = tk.Frame(waiting_staff_window)
+    main_frame.pack(padx=20, pady=20)
+    title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+    title_label.pack(pady=(0, 10))
+    center_frame = tk.Frame(waiting_staff_window)
+    center_frame.pack(expand=True)
+    center_frame.grid_columnconfigure(0, weight=1)
+    logo_image = Image.open("restt.png")  # Replace with your logo path
+    logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+    logo_photo = ImageTk.PhotoImage(logo_image)
+    logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+    logo_label.image = logo_photo  # Keep a reference
+    logo_label.pack(side='left', padx=10, pady=5)
     # Center frame for holding the buttons
     center_frame = tk.Frame(waiting_staff_window)
     center_frame.pack(expand=True)
@@ -2167,14 +2557,42 @@ def waiting_staff_Login(email_entry, password_entry):
         order_window.title("Order")
         order_window.state('zoomed')
         # take_order_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
-
+        top_border = tk.Canvas(order_window, height=50, bg='black')
+        top_border.pack(side='top', fill='x')    
+        main_frame = tk.Frame(order_window)
+        main_frame.pack(padx=20, pady=20)
+        title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+        title_label.pack(pady=(0, 10))
+        center_frame = tk.Frame(order_window)
+        center_frame.pack(expand=True)
+        center_frame.grid_columnconfigure(0, weight=1)
+        logo_image = Image.open("restt.png")  # Replace with your logo path
+        logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+        logo_photo = ImageTk.PhotoImage(logo_image)
+        logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+        logo_label.image = logo_photo  # Keep a reference
+        logo_label.pack(side='left', padx=10, pady=5)
         def take_order(selected_branch_info):
             # Create a new window for taking an order
             take_order_window = tk.Toplevel(window)
             take_order_window.title("Take Order")
             take_order_window.state('zoomed')
             # take_order_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
-
+            top_border = tk.Canvas(take_order_window, height=50, bg='black')
+            top_border.pack(side='top', fill='x')    
+            main_frame = tk.Frame(take_order_window)
+            main_frame.pack(padx=20, pady=20)
+            title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+            title_label.pack(pady=(0, 10))
+            center_frame = tk.Frame(take_order_window)
+            center_frame.pack(expand=True)
+            center_frame.grid_columnconfigure(0, weight=1)
+            logo_image = Image.open("restt.png")  # Replace with your logo path
+            logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+            logo_photo = ImageTk.PhotoImage(logo_image)
+            logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+            logo_label.image = logo_photo  # Keep a reference
+            logo_label.pack(side='left', padx=10, pady=5)
             # Function to fetch available stock
             def get_available_stock(branch_id):
                 cursor = db.cursor()
@@ -2745,6 +3163,21 @@ def Kitchen_Staff_Login(email_entry, password_entry):
     kitchen_staff_window = tk.Toplevel(window)
     kitchen_staff_window.title(f"Kitchen Staff Options - {selected_branch_info}")
     kitchen_staff_window.state('zoomed')
+    top_border = tk.Canvas(kitchen_staff_window, height=50, bg='black')
+    top_border.pack(side='top', fill='x')    
+    main_frame = tk.Frame(kitchen_staff_window)
+    main_frame.pack(padx=20, pady=20)
+    title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+    title_label.pack(pady=(0, 10))
+    center_frame = tk.Frame(kitchen_staff_window)
+    center_frame.pack(expand=True)
+    center_frame.grid_columnconfigure(0, weight=1)
+    logo_image = Image.open("restt.png")  # Replace with your logo path
+    logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+    logo_photo = ImageTk.PhotoImage(logo_image)
+    logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+    logo_label.image = logo_photo  # Keep a reference
+    logo_label.pack(side='left', padx=10, pady=5)   
     # kitchen_staff_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
 
     # Center frame for holding the buttons
@@ -2758,7 +3191,21 @@ def Kitchen_Staff_Login(email_entry, password_entry):
         view_orders_window.title("View Orders")
         view_orders_window.state('zoomed')
         # view_orders_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
-
+        top_border = tk.Canvas(view_orders_window, height=50, bg='black')
+        top_border.pack(side='top', fill='x')    
+        main_frame = tk.Frame(view_orders_window)
+        main_frame.pack(padx=20, pady=20)
+        title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+        title_label.pack(pady=(0, 10))
+        center_frame = tk.Frame(view_orders_window)
+        center_frame.pack(expand=True)
+        center_frame.grid_columnconfigure(0, weight=1)
+        logo_image = Image.open("restt.png")  # Replace with your logo path
+        logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+        logo_photo = ImageTk.PhotoImage(logo_image)
+        logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+        logo_label.image = logo_photo  # Keep a reference
+        logo_label.pack(side='left', padx=10, pady=5)
         # Listbox to display orders
         orders_listbox = tk.Listbox(view_orders_window, width=50, height=20)
         orders_listbox.pack(pady=20)
@@ -2819,7 +3266,21 @@ def Kitchen_Staff_Login(email_entry, password_entry):
         stock_options_window = tk.Toplevel(window)
         stock_options_window.title(f"Stock Options - {selected_branch_info}")
         stock_options_window.state('zoomed')
-
+        top_border = tk.Canvas(stock_options_window, height=50, bg='black')
+        top_border.pack(side='top', fill='x')    
+        main_frame = tk.Frame(stock_options_window)
+        main_frame.pack(padx=20, pady=20)
+        title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+        title_label.pack(pady=(0, 10))
+        center_frame = tk.Frame(stock_options_window)
+        center_frame.pack(expand=True)
+        center_frame.grid_columnconfigure(0, weight=1)
+        logo_image = Image.open("restt.png")  # Replace with your logo path
+        logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+        logo_photo = ImageTk.PhotoImage(logo_image)
+        logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+        logo_label.image = logo_photo  # Keep a reference
+        logo_label.pack(side='left', padx=10, pady=5)
         stock_center_frame = tk.Frame(stock_options_window)
         stock_center_frame.pack(expand=True)
         # stock_options_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
@@ -2843,7 +3304,21 @@ def Kitchen_Staff_Login(email_entry, password_entry):
         view_stock_window.title("View Stock")
         view_stock_window.state('zoomed')
         # view_stock_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
-
+        top_border = tk.Canvas(view_stock_window , height=50, bg='black')
+        top_border.pack(side='top', fill='x')    
+        main_frame = tk.Frame(view_stock_window )
+        main_frame.pack(padx=20, pady=20)
+        title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+        title_label.pack(pady=(0, 10))
+        center_frame = tk.Frame(view_stock_window )
+        center_frame.pack(expand=True)
+        center_frame.grid_columnconfigure(0, weight=1)
+        logo_image = Image.open("restt.png")  # Replace with your logo path
+        logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+        logo_photo = ImageTk.PhotoImage(logo_image)
+        logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+        logo_label.image = logo_photo  # Keep a reference
+        logo_label.pack(side='left', padx=10, pady=5)
         # Fetch all stock for the branch
         cursor = db.cursor()
         cursor.execute("SELECT StockID, StockType, AmountInStock, Price FROM Stock WHERE BranchID = %s", (branch_id,))
@@ -2866,7 +3341,21 @@ def Kitchen_Staff_Login(email_entry, password_entry):
         add_stock_window.title("Add Stock")
         add_stock_window.state('zoomed')
         # add_stock_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
-
+        top_border = tk.Canvas(add_stock_window , height=50, bg='black')
+        top_border.pack(side='top', fill='x')    
+        main_frame = tk.Frame(add_stock_window)
+        main_frame.pack(padx=20, pady=20)
+        title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+        title_label.pack(pady=(0, 10))
+        center_frame = tk.Frame(add_stock_window)
+        center_frame.pack(expand=True)
+        center_frame.grid_columnconfigure(0, weight=1)
+        logo_image = Image.open("restt.png")  # Replace with your logo path
+        logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+        logo_photo = ImageTk.PhotoImage(logo_image)
+        logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+        logo_label.image = logo_photo  # Keep a reference
+        logo_label.pack(side='left', padx=10, pady=5)
         # Entry fields for stock details
         stock_type_label = tk.Label(add_stock_window, text="Stock Type:", font=fontStyle)
         stock_type_label.pack()
@@ -3107,7 +3596,21 @@ def manager_Login(email_entry, password_entry):
     staff_roles_window.title(f"Manager Options - {selected_branch_info}")
     staff_roles_window.state('zoomed')
     # manager_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
-
+    top_border = tk.Canvas(staff_roles_window , height=50, bg='black')
+    top_border.pack(side='top', fill='x')    
+    main_frame = tk.Frame(staff_roles_window)
+    main_frame.pack(padx=20, pady=20)
+    title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+    title_label.pack(pady=(0, 10))
+    center_frame = tk.Frame(staff_roles_window)
+    center_frame.pack(expand=True)
+    center_frame.grid_columnconfigure(0, weight=1)
+    logo_image = Image.open("restt.png")  # Replace with your logo path
+    logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+    logo_photo = ImageTk.PhotoImage(logo_image)
+    logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+    logo_label.image = logo_photo  # Keep a reference
+    logo_label.pack(side='left', padx=10, pady=5)
     heading_roles_frame = tk.Frame(staff_roles_window)
     heading_roles_frame.pack(side=tk.TOP, pady=10)
 
@@ -3127,7 +3630,21 @@ def manager_Login(email_entry, password_entry):
         # Create a new window for showing all staff in the branch
         show_all_staff_window = tk.Toplevel(window)
         show_all_staff_window.title("Show All Staff")
-
+        top_border = tk.Canvas(show_all_staff_window , height=50, bg='black')
+        top_border.pack(side='top', fill='x')    
+        main_frame = tk.Frame(show_all_staff_window)
+        main_frame.pack(padx=20, pady=20)
+        title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+        title_label.pack(pady=(0, 10))
+        center_frame = tk.Frame(show_all_staff_window)
+        center_frame.pack(expand=True)
+        center_frame.grid_columnconfigure(0, weight=1)
+        logo_image = Image.open("restt.png")  # Replace with your logo path
+        logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+        logo_photo = ImageTk.PhotoImage(logo_image)
+        logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+        logo_label.image = logo_photo  # Keep a reference
+        logo_label.pack(side='left', padx=10, pady=5)
         # Fetch all staff for the branch
         cursor = db.cursor()
         cursor.execute("SELECT AccountID, ForeName, SurName, Email, Role FROM Account WHERE BranchID = %s", (branch_id,))
@@ -3150,7 +3667,21 @@ def manager_Login(email_entry, password_entry):
         add_staff_window.title("Add Staff")
         add_staff_window.state('zoomed')
         # add_staff_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
-
+        top_border = tk.Canvas(add_staff_window , height=50, bg='black')
+        top_border.pack(side='top', fill='x')    
+        main_frame = tk.Frame(add_staff_window)
+        main_frame.pack(padx=20, pady=20)
+        title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+        title_label.pack(pady=(0, 10))
+        center_frame = tk.Frame(add_staff_window)
+        center_frame.pack(expand=True)
+        center_frame.grid_columnconfigure(0, weight=1)
+        logo_image = Image.open("restt.png")  # Replace with your logo path
+        logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+        logo_photo = ImageTk.PhotoImage(logo_image)
+        logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+        logo_label.image = logo_photo  # Keep a reference
+        logo_label.pack(side='left', padx=10, pady=5)
         # Entry fields for staff details
         forename_label = tk.Label(add_staff_window, text="Forename:", font=fontStyle)
         forename_label.pack()
@@ -3425,7 +3956,21 @@ def manager_Login(email_entry, password_entry):
                 staff_report_window.title("Staff report")
                 staff_report_window.state('zoomed')
                 # staff_report_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
-
+                top_border = tk.Canvas(staff_report_window , height=50, bg='black')
+                top_border.pack(side='top', fill='x')    
+                main_frame = tk.Frame(staff_report_window)
+                main_frame.pack(padx=20, pady=20)
+                title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+                title_label.pack(pady=(0, 10))
+                center_frame = tk.Frame(staff_report_window)
+                center_frame.pack(expand=True)
+                center_frame.grid_columnconfigure(0, weight=1)
+                logo_image = Image.open("restt.png")  # Replace with your logo path
+                logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+                logo_photo = ImageTk.PhotoImage(logo_image)
+                logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+                logo_label.image = logo_photo  # Keep a reference
+                logo_label.pack(side='left', padx=10, pady=5)
                 #staff report title
                 header_label = tk.Label(staff_report_window, text="Managers", font=('Helvetica', 14, 'bold'))
                 header_label.pack(pady=10)
@@ -3557,7 +4102,21 @@ def manager_Login(email_entry, password_entry):
                 stock_options_window = tk.Toplevel(window)
                 stock_options_window.title(f"Reports - {selected_branch_info}")
                 stock_options_window.state('zoomed')
-
+                top_border = tk.Canvas(stock_options_window , height=50, bg='black')
+                top_border.pack(side='top', fill='x')    
+                main_frame = tk.Frame(stock_options_window)
+                main_frame.pack(padx=20, pady=20)
+                title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+                title_label.pack(pady=(0, 10))
+                center_frame = tk.Frame(stock_options_window)
+                center_frame.pack(expand=True)
+                center_frame.grid_columnconfigure(0, weight=1)
+                logo_image = Image.open("restt.png")  # Replace with your logo path
+                logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+                logo_photo = ImageTk.PhotoImage(logo_image)
+                logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+                logo_label.image = logo_photo  # Keep a reference
+                logo_label.pack(side='left', padx=10, pady=5)
                 stock_center_frame = tk.Frame(stock_options_window)
                 stock_center_frame.pack(expand=True)
 
@@ -3579,7 +4138,21 @@ def manager_Login(email_entry, password_entry):
                 stock_options_window = tk.Toplevel(window)
                 stock_options_window.title(f"Stock Options - {selected_branch_info}")
                 stock_options_window.state('zoomed')
-
+                top_border = tk.Canvas(stock_options_window , height=50, bg='black')
+                top_border.pack(side='top', fill='x')    
+                main_frame = tk.Frame(stock_options_window)
+                main_frame.pack(padx=20, pady=20)
+                title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+                title_label.pack(pady=(0, 10))
+                center_frame = tk.Frame(stock_options_window)
+                center_frame.pack(expand=True)
+                center_frame.grid_columnconfigure(0, weight=1)
+                logo_image = Image.open("restt.png")  # Replace with your logo path
+                logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+                logo_photo = ImageTk.PhotoImage(logo_image)
+                logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+                logo_label.image = logo_photo  # Keep a reference
+                logo_label.pack(side='left', padx=10, pady=5)
                 stock_center_frame = tk.Frame(stock_options_window)
                 stock_center_frame.pack(expand=True)
                 # stock_options_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
@@ -3603,7 +4176,21 @@ def manager_Login(email_entry, password_entry):
                 view_stock_window.title("View Stock")
                 view_stock_window.state('zoomed')
                 # view_stock_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
-
+                top_border = tk.Canvas( view_stock_window, height=50, bg='black')
+                top_border.pack(side='top', fill='x')    
+                main_frame = tk.Frame( view_stock_window)
+                main_frame.pack(padx=20, pady=20)
+                title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+                title_label.pack(pady=(0, 10))
+                center_frame = tk.Frame( view_stock_window)
+                center_frame.pack(expand=True)
+                center_frame.grid_columnconfigure(0, weight=1)
+                logo_image = Image.open("restt.png")  # Replace with your logo path
+                logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+                logo_photo = ImageTk.PhotoImage(logo_image)
+                logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+                logo_label.image = logo_photo  # Keep a reference
+                logo_label.pack(side='left', padx=10, pady=5)
                 # Fetch all stock for the branch
                 cursor = db.cursor()
                 cursor.execute("SELECT StockID, StockType, AmountInStock, Price FROM Stock WHERE BranchID = %s", (branch_id,))
@@ -3626,7 +4213,21 @@ def manager_Login(email_entry, password_entry):
                 add_stock_window.title("Add Stock")
                 add_stock_window.state('zoomed')
                 # add_stock_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
-
+                top_border = tk.Canvas(add_stock_window, height=50, bg='black')
+                top_border.pack(side='top', fill='x')    
+                main_frame = tk.Frame( add_stock_window)
+                main_frame.pack(padx=20, pady=20)
+                title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+                title_label.pack(pady=(0, 10))
+                center_frame = tk.Frame(add_stock_window)
+                center_frame.pack(expand=True)
+                center_frame.grid_columnconfigure(0, weight=1)
+                logo_image = Image.open("restt.png")  # Replace with your logo path
+                logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+                logo_photo = ImageTk.PhotoImage(logo_image)
+                logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+                logo_label.image = logo_photo  # Keep a reference
+                logo_label.pack(side='left', padx=10, pady=5)
                 # Entry fields for stock details
                 stock_type_label = tk.Label(add_stock_window, text="Stock Type:", font=fontStyle)
                 stock_type_label.pack()
@@ -3951,7 +4552,21 @@ def manager_Login(email_entry, password_entry):
                     take_order_window.title("Take Order")
                     take_order_window.state('zoomed')
                     # take_order_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
-
+                    top_border = tk.Canvas(take_order_window, height=50, bg='black')
+                    top_border.pack(side='top', fill='x')    
+                    main_frame = tk.Frame( take_order_window)
+                    main_frame.pack(padx=20, pady=20)
+                    title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+                    title_label.pack(pady=(0, 10))
+                    center_frame = tk.Frame(take_order_window)
+                    center_frame.pack(expand=True)
+                    center_frame.grid_columnconfigure(0, weight=1)
+                    logo_image = Image.open("restt.png")  # Replace with your logo path
+                    logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+                    logo_photo = ImageTk.PhotoImage(logo_image)
+                    logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+                    logo_label.image = logo_photo  # Keep a reference
+                    logo_label.pack(side='left', padx=10, pady=5)
                     # Function to fetch available stock
                     def get_available_stock(branch_id):
                         cursor = db.cursor()
@@ -4115,7 +4730,21 @@ def manager_Login(email_entry, password_entry):
                     view_orders_window.title("View Orders")
                     view_orders_window.state('zoomed')
                     # view_orders_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
-
+                    top_border = tk.Canvas(view_orders_window, height=50, bg='black')
+                    top_border.pack(side='top', fill='x')    
+                    main_frame = tk.Frame( view_orders_window)
+                    main_frame.pack(padx=20, pady=20)
+                    title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+                    title_label.pack(pady=(0, 10))
+                    center_frame = tk.Frame(view_orders_window)
+                    center_frame.pack(expand=True)
+                    center_frame.grid_columnconfigure(0, weight=1)
+                    logo_image = Image.open("restt.png")  # Replace with your logo path
+                    logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+                    logo_photo = ImageTk.PhotoImage(logo_image)
+                    logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+                    logo_label.image = logo_photo  # Keep a reference
+                    logo_label.pack(side='left', padx=10, pady=5)
                     # Fetch all orders with their corresponding StockType for the branch
                     cursor = db.cursor()
                     cursor.execute("""SELECT o.TrackID, s.StockType, o.TableID
@@ -4257,7 +4886,21 @@ def manager_Login(email_entry, password_entry):
                 reservation_window.title("Reservation")
                 reservation_window.state('zoomed')
                 # reservation_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
-
+                top_border = tk.Canvas(reservation_window, height=50, bg='black')
+                top_border.pack(side='top', fill='x')    
+                main_frame = tk.Frame(reservation_window)
+                main_frame.pack(padx=20, pady=20)
+                title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
+                title_label.pack(pady=(0, 10))
+                center_frame = tk.Frame(reservation_window)
+                center_frame.pack(expand=True)
+                center_frame.grid_columnconfigure(0, weight=1)
+                logo_image = Image.open("restt.png")  # Replace with your logo path
+                logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
+                logo_photo = ImageTk.PhotoImage(logo_image)
+                logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
+                logo_label.image = logo_photo  # Keep a reference
+                logo_label.pack(side='left', padx=10, pady=5)
                 def take_reservation(selected_branch_info):
                     # Create a new window for taking reservation
                     take_reservation_window = tk.Toplevel(window)
