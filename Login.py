@@ -179,50 +179,6 @@ def save_new_branch(city, postcode, num_tables_str, new_branch_window):
 
 def show_staff(selected_branch_info):
     all_staff_window = tk.Toplevel(window)
-    def help_on_enter(e):
-            help_button.config(bg='gray')  # Change color on hover
-
-    def help_on_leave(e):
-        help_button.config(bg='lightgrey') 
-    def open_help():
-        help_window = tk.Toplevel(window)
-        help_window.title("Help")
-        help_window.geometry("400x300")  # Adjust size as needed
-
-        # Text area for comments
-        comment_text = tk.Text(help_window, height=10, width=40)
-        comment_text.pack(pady=10)
-        def submit_comment():
-            comment = comment_text.get("1.0", "end-1c")
-            print("Comment submitted:", comment)  # Replace with actual processing logic
-            help_window.destroy()
-        submit_button = tk.Button(help_window, text="Submit Comment", command=submit_comment)
-        submit_button.pack(pady=10)
-    hr_options_window = tk.Toplevel(window)
-    hr_options_window.title("HR Director Branches")
-    hr_options_window.state('zoomed')
-
-    # hr_options_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
-    top_border = tk.Canvas(hr_options_window, height=50, bg='black')
-    top_border.pack(side='top', fill='x')    
-    main_frame = tk.Frame(hr_options_window)
-    main_frame.pack(padx=20, pady=20)
-    title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
-    title_label.pack(pady=(0, 10))
-    help_font = tkFont.Font(family="Arial", size=25, weight="bold")
-    help_button = tk.Button(top_border, text="Help", command=open_help, font=help_font, bg='white', relief='groove', bd=2)
-    help_button.pack(side='right', padx=10, pady=5)
-    help_button.bind("<Enter>", help_on_enter)
-    help_button.bind("<Leave>", help_on_leave)
-    center_frame = tk.Frame(hr_options_window)
-    center_frame.pack(expand=True)
-    center_frame.grid_columnconfigure(0, weight=1)
-    logo_image = Image.open("restt.png")  # Replace with your logo path
-    logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
-    logo_photo = ImageTk.PhotoImage(logo_image)
-    logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
-    logo_label.image = logo_photo  # Keep a reference
-    logo_label.pack(side='left', padx=10, pady=5)
     
     city, postcode = selected_branch_info.split(", ")
     all_staff_window.title(f"All Staff in {city} - {postcode}")
