@@ -1,6 +1,5 @@
 import tkinter as tk
 import tkinter.font as tkFont
-import sqlite3
 from tkinter import ttk
 import mysql.connector
 from tkinter import messagebox
@@ -836,7 +835,7 @@ def manager_options(selected_branch_info, previous_window):
                 except Exception as e:
                     messagebox.showerror("Error", f"An error occurred: {e}")
             
-            remove_button = tk.Button(remove_stock_window, text="Remove Stock", command=remove_selected_stock, **buttonStyle)
+            remove_button = tk.Button(remove_stock_window, text="Delete Stock Item", command=remove_selected_stock, **buttonStyle)
             remove_button.pack()
             back_button = tk.Button(remove_stock_window, text="Back", command=remove_stock_window.destroy, **buttonStyle)
             back_button.pack(pady=10)
@@ -887,7 +886,7 @@ def manager_options(selected_branch_info, previous_window):
                     remove_stock_window.destroy()
                     stock_options(selected_branch_info)
 
-            remove_button = tk.Button(remove_stock_window, text="Remove Stock", command=remove_stock, **buttonStyle)
+            remove_button = tk.Button(remove_stock_window, text="Remove Stock Amount", command=remove_stock, **buttonStyle)
             remove_button.pack()
 
             #back button to go back to the previous window
@@ -1776,21 +1775,7 @@ def kitchen_staff_options(selected_branch_info, previous_window):
         stock_options_window = tk.Toplevel(window)
         stock_options_window.title(f"Stock Options - {selected_branch_info}")
         stock_options_window.state('zoomed')
-        top_border = tk.Canvas(stock_options_window , height=50, bg='black')
-        top_border.pack(side='top', fill='x')    
-        main_frame = tk.Frame(stock_options_window)
-        main_frame.pack(padx=20, pady=20)
-        title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
-        title_label.pack(pady=(0, 10))
-        center_frame = tk.Framestock_options_window
-        center_frame.pack(expand=True)
-        center_frame.grid_columnconfigure(0, weight=1)
-        logo_image = Image.open("restt.png")  # Replace with your logo path
-        logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
-        logo_photo = ImageTk.PhotoImage(logo_image)
-        logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
-        logo_label.image = logo_photo  # Keep a reference
-        logo_label.pack(side='left', padx=10, pady=5)
+
         stock_center_frame = tk.Frame(stock_options_window)
         stock_center_frame.pack(expand=True)
         # stock_options_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
@@ -1813,21 +1798,6 @@ def kitchen_staff_options(selected_branch_info, previous_window):
         view_stock_window = tk.Toplevel(window)
         view_stock_window.title("View Stock")
         view_stock_window.state('zoomed')
-        top_border = tk.Canvas(view_stock_window , height=50, bg='black')
-        top_border.pack(side='top', fill='x')    
-        main_frame = tk.Frame(view_stock_window)
-        main_frame.pack(padx=20, pady=20)
-        title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
-        title_label.pack(pady=(0, 10))
-        center_frame = tk.Framestock_options_window
-        center_frame.pack(expand=True)
-        center_frame.grid_columnconfigure(0, weight=1)
-        logo_image = Image.open("restt.png")  # Replace with your logo path
-        logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
-        logo_photo = ImageTk.PhotoImage(logo_image)
-        logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
-        logo_label.image = logo_photo  # Keep a reference
-        logo_label.pack(side='left', padx=10, pady=5)
         # Extract city and postcode from the selected_branch_info
         city, postcode = selected_branch_info.split(", ")
 
@@ -1862,21 +1832,7 @@ def kitchen_staff_options(selected_branch_info, previous_window):
         add_stock_window.title("Add Stock")
         add_stock_window.state('zoomed')
         # add_stock_window.attributes('-fullscreen', True) # Uncomment this for Linux/Mac
-        top_border = tk.Canvas(add_stock_window , height=50, bg='black')
-        top_border.pack(side='top', fill='x')    
-        main_frame = tk.Frame(add_stock_window )
-        main_frame.pack(padx=20, pady=20)
-        title_label = tk.Label(main_frame, text="Horizon Restaurants", font=("Helvetica", 20, "bold"))
-        title_label.pack(pady=(0, 10))
-        center_frame = tk.Framestock_options_window
-        center_frame.pack(expand=True)
-        center_frame.grid_columnconfigure(0, weight=1)
-        logo_image = Image.open("restt.png")  # Replace with your logo path
-        logo_image = logo_image.resize((90, 90), Image.Resampling.LANCZOS)  # Resize logo
-        logo_photo = ImageTk.PhotoImage(logo_image)
-        logo_label = tk.Label(top_border, image=logo_photo, bg='gray')
-        logo_label.image = logo_photo  # Keep a reference
-        logo_label.pack(side='left', padx=10, pady=5)
+
         # Extract city and postcode from the selected_branch_info
         city, postcode = selected_branch_info.split(", ")
 
@@ -2042,7 +1998,7 @@ def kitchen_staff_options(selected_branch_info, previous_window):
                 except Exception as e:
                     messagebox.showerror("Error", f"An error occurred: {e}")
             
-            remove_button = tk.Button(remove_stock_window, text="Remove Stock", command=remove_selected_stock, **buttonStyle)
+            remove_button = tk.Button(remove_stock_window, text="Delete Stock Item", command=remove_selected_stock, **buttonStyle)
             remove_button.pack()
             back_button = tk.Button(remove_stock_window, text="Back", command=remove_stock_window.destroy, **buttonStyle)
             back_button.pack(pady=10)
@@ -2093,7 +2049,7 @@ def kitchen_staff_options(selected_branch_info, previous_window):
                     remove_stock_window.destroy()
                     update_stock(selected_branch_info)
 
-            remove_button = tk.Button(remove_stock_window, text="Remove Stock", command=remove_stock, **buttonStyle)
+            remove_button = tk.Button(remove_stock_window, text="Remove Stock Amount", command=remove_stock, **buttonStyle)
             remove_button.pack()
 
             #back button to go back to the previous window
@@ -3451,7 +3407,7 @@ def Kitchen_Staff_Login(email_entry, password_entry):
                 except Exception as e:
                     messagebox.showerror("Error", f"An error occurred: {e}")
             
-            remove_button = tk.Button(remove_stock_window, text="Remove Stock", command=remove_selected_stock, **buttonStyle)
+            remove_button = tk.Button(remove_stock_window, text="Delete Stock Item", command=remove_selected_stock, **buttonStyle)
             remove_button.pack()
             back_button = tk.Button(remove_stock_window, text="Back", command=remove_stock_window.destroy, **buttonStyle)
             back_button.pack(pady=10)
@@ -3502,7 +3458,7 @@ def Kitchen_Staff_Login(email_entry, password_entry):
                     remove_stock_window.destroy()
                     update_stock(selected_branch_info)
 
-            remove_button = tk.Button(remove_stock_window, text="Remove Stock", command=remove_stock, **buttonStyle)
+            remove_button = tk.Button(remove_stock_window, text="Remove Stock Amount", command=remove_stock, **buttonStyle)
             remove_button.pack()
 
             #back button to go back to the previous window
@@ -4332,7 +4288,7 @@ def manager_Login(email_entry, password_entry):
                         except Exception as e:
                             messagebox.showerror("Error", f"An error occurred: {e}")
                     
-                    remove_button = tk.Button(remove_stock_window, text="Remove Stock", command=remove_selected_stock, **buttonStyle)
+                    remove_button = tk.Button(remove_stock_window, text="Delete Stock Item", command=remove_selected_stock, **buttonStyle)
                     remove_button.pack()
                     back_button = tk.Button(remove_stock_window, text="Back", command=remove_stock_window.destroy, **buttonStyle)
                     back_button.pack(pady=10)
@@ -4382,7 +4338,7 @@ def manager_Login(email_entry, password_entry):
                             remove_stock_window.destroy()
                             stock_options(selected_branch_info)
 
-                    remove_button = tk.Button(remove_stock_window, text="Remove Stock", command=remove_stock, **buttonStyle)
+                    remove_button = tk.Button(remove_stock_window, text="Remove Stock Amount", command=remove_stock, **buttonStyle)
                     remove_button.pack()
 
                     #back button to go back to the previous window
